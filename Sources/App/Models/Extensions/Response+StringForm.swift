@@ -9,7 +9,8 @@ import Foundation
 import Vapor
 
 extension Response {
-    func stringForm() -> String? {
+    /// This only works on a response that has a json body
+    func jsonString() -> String? {
         if let last = "\(self)".components(separatedBy: "{").last {
             return "{\(last)"
         }

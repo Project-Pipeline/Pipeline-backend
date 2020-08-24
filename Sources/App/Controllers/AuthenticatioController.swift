@@ -22,7 +22,7 @@ struct AuthenticationController: RouteCollection {
 
         try router.oAuth(
             from: Google.self,
-            authenticate: "login",
+            authenticate: "api/googlelogin",
             callback: googleCallbackURL,
             scope: ["profile", "email"],
             completion:
@@ -33,7 +33,7 @@ struct AuthenticationController: RouteCollection {
         
         // MARK: - OAuth: 2nd and 3rd step
         
-        router.get("api/login") { req -> Future<String> in
+        router.get("api/login") { req -> Future<Response> in
             guard let code = req.query[String.self, at: "code"],
                 let secondAuth = SecondAuth(code: code) else {
                 throw Abort(.internalServerError)
@@ -44,7 +44,7 @@ struct AuthenticationController: RouteCollection {
                     try req.content.encode(secondAuth)
                 })
                 .flatMap { response -> Future<Response> in
-                    guard let json = response.stringForm()?.data(using: .utf8) else {
+                    guard let json = response.jsonString()?.data(using: .utf8) else {
                         throw Abort(.internalServerError)
                     }
                     let accessToken = try decoder.decode(GoogleAccessToken.self, from: json)
@@ -52,12 +52,13 @@ struct AuthenticationController: RouteCollection {
                         "https://www.googleapis.com/oauth2/v1/userinfo?access_token=\(accessToken.accessToken)",
                         headers: HTTPHeaders([("Authorization","Bearer \(accessToken.accessToken)")]))
                 }
-                .flatMap { response -> Future<String> in
-                    guard let json = response.stringForm()?.data(using: .utf8) else {
+                .flatMap { response -> Future<Response> in
+                    guard let json = response.jsonString()?.data(using: .utf8) else {
                         throw Abort(.internalServerError)
                     }
                     let user = try decoder.decode(GoogleUser.self, from: json)
-                    return req.future("\(user)")
+                    let params = try user.queryParameters()
+                    return req.future(req.redirect(to: "http:localhost:4200/login\(params)"))
                 }
         }
     }
