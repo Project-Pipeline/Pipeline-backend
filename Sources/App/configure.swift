@@ -17,10 +17,11 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     // middlewares.use(FileMiddleware.self) // Serves files from `Public/` directory
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     middlewares.use(SessionsMiddleware.self)
+    FeatureFlags.configureMiddlewareFrom(config: &middlewares)
     services.register(middlewares)
 
     // Configure a SQLite database
-    let sqlite = try SQLiteDatabase(storage: .memory)
+    let sqlite = try SQLiteDatabase(storage: .file(path: "db.sqlite"))
 
     // Register the configured SQLite database to the database config.
     var databases = DatabasesConfig()
@@ -29,5 +30,6 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
 
     // Configure migrations
     var migrations = MigrationConfig()
+    migrations.add(migration: User.self, database: .sqlite)
     services.register(migrations)
 }
