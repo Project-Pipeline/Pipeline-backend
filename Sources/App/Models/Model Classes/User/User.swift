@@ -8,6 +8,16 @@
 import Foundation
 import Vapor
 import FluentSQLite
+import JWT
+
+struct UserEmail: Codable {
+    let email: String
+}
+
+struct UserExistence: Content {
+    let email: String
+    let exists: Bool
+}
 
 struct User: Codable {
     let email: String
@@ -29,4 +39,10 @@ extension User: Model {
 
 extension User: Content, Migration, Parameter {
     
+}
+
+extension User: JWTPayload {
+    func verify(using signer: JWTSigner) throws {
+        
+    }
 }

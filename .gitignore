@@ -7,3 +7,4 @@ DerivedData/
 .swiftpm
 db.sqlite
 build/
+jwtKey.key
