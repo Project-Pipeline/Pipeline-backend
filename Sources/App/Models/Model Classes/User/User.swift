@@ -7,7 +7,6 @@
 
 import Foundation
 import Vapor
-import FluentSQLite
 import JWT
 
 struct UserEmail: Codable {
@@ -19,11 +18,11 @@ struct UserExistence: Content {
     let exists: Bool
 }
 
-struct User: Codable {
+struct User: Codable, Content {
     let email: String
     let givenName: String
     let familyName: String
-    let picture: URL
+    let picture: String
     let entityBelongedTo: String
     let entityName: String
     let industryType: String
@@ -31,14 +30,19 @@ struct User: Codable {
     var id: Int?
 }
 
-extension User: Model {
-    typealias Database = SQLiteDatabase
-    typealias ID = Int
-    public static var idKey: IDKey = \User.id
-}
-
-extension User: Content, Migration, Parameter {
+extension User: MongoModel {
+    static var mockedInstance: User {
+        return User(email: "", givenName: "", familyName: "", picture: "",
+                    entityBelongedTo: "", entityName: "", industryType: "", industry: "", id: nil)
+    }
     
+    var collectionName: String {
+        return "Users"
+    }
+    
+    var databaseName: String {
+        return "Project-pipeline"
+    }
 }
 
 extension User: JWTPayload {

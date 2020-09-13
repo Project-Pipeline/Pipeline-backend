@@ -15,11 +15,21 @@ let package = Package(
         
         // Google OAuth
         .package(url: "https://github.com/vapor/auth.git", from: "2.0.0"),
-        .package(url: "https://github.com/vapor-community/Imperial.git", from: "0.7.1")
+        .package(url: "https://github.com/vapor-community/Imperial.git", from: "0.7.1"),
+        
+        //mongo db
+        .package(url: "https://github.com/mongodb/mongo-swift-driver.git", from: "0.1.3")
     ],
     targets: [
-        .target(name: "App", dependencies: ["FluentSQLite", "Vapor", "Authentication", "Imperial"]),
+        .target(name: "App", dependencies: [
+            "FluentSQLite",
+            "Vapor",
+            "Authentication",
+            "Imperial",
+            "MongoSwift"
+        ]),
         .target(name: "Run", dependencies: ["App"]),
+        
         .testTarget(name: "AppTests", dependencies: ["App"])
     ]
 )
