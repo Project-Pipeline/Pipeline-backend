@@ -13,6 +13,8 @@ import MongoSwift
 
 struct UsersController: RouteCollection {
     func boot(router: Router) throws {
+        // MARK: - User creation & login
+        
         router.post("api", "user", "create") { req -> Future<ServerResponse> in
             return try req.content
                 .decode(User.self)
@@ -39,7 +41,8 @@ struct UsersController: RouteCollection {
                     }
                     
                     let key = try readStringFromFile(named: "jwtKey.key", isPublic: false)
-                    let data = try JWT(payload: matchedUser).sign(using: .hs256(key: key))
+                    let payload = AccessTokenPayload(userEmail: matchedUser.email)
+                    let data = try JWT(payload: payload).sign(using: .hs256(key: key))
                     guard let string =  String(data: data, encoding: .utf8) else {
                         throw Abort(.internalServerError)
                     }
@@ -57,6 +60,13 @@ struct UsersController: RouteCollection {
                     let exists = attempt != nil
                     return req.future(UserExistence(email: userEmail.email, exists: exists))
                 }
+        }
+        
+        // MARK: - JWT-required endpoints
+        
+        router.get("api", "user", "info") { req -> Future<User> in
+            let user = try req.authorizeAndGetUser()
+            return req.future(user)
         }
     }
 }

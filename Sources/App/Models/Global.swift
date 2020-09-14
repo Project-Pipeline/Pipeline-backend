@@ -19,7 +19,7 @@ func readStringFromFile(named name: String, isPublic: Bool) throws -> String {
     if let result = String(data: data, encoding: .utf8) {
         return result
     } else {
-        throw NSError(domain: "Malformed string", code: 0)
+        throw PipelineError(message: "Malformed string")
     }
 }
 

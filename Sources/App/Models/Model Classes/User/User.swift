@@ -7,7 +7,6 @@
 
 import Foundation
 import Vapor
-import JWT
 
 struct UserEmail: Codable {
     let email: String
@@ -42,11 +41,5 @@ extension User: MongoModel {
     
     var databaseName: String {
         return "Project-pipeline"
-    }
-}
-
-extension User: JWTPayload {
-    func verify(using signer: JWTSigner) throws {
-        
     }
 }
