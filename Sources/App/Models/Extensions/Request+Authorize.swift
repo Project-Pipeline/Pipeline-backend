@@ -21,14 +21,16 @@ extension Request {
         return payload.payload.userEmail
     }
     
-    func authorizeAndGetUser() throws -> User {
+    func authorizeAndGetUser() throws -> Future<User> {
         let email = try authorize()
-        let client = try make(MongoClient.self)
-        let users = client.collection(for: User.self)
-        guard let user = try users.find().filter({ $0.email == email }).first else {
-            throw PipelineError(message: "User \(email) does not exist")
-        }
-        return user
+        return User.query(on: self)
+            .all()
+            .flatMap { user -> Future<User> in
+                guard let user = user.filter({ $0.email == email }).first else {
+                    throw PipelineError(message: "")
+                }
+                return self.future(user)
+            }
     }
 }
 
