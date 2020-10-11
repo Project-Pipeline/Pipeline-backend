@@ -58,7 +58,7 @@ struct AuthenticationController: RouteCollection {
                     }
                     let user = try decoder.decode(GoogleUser.self, from: json)
                     let params = try user.queryParameters()
-                    return req.future(req.redirect(to: "http:localhost:4200/login\(params)"))
+                    return req.future(req.redirect(to: "http://localhost:4200/logindetails\(params)"))
                 }
         }
     }

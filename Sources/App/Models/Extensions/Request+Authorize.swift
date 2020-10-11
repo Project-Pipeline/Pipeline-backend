@@ -17,8 +17,12 @@ extension Request {
         }
         let key = try readStringFromFile(named: "jwtKey.key", isPublic: false)
         let signer = JWTSigner.hs256(key: key)
-        let payload = try JWT<AccessTokenPayload>(from: bearer.token, verifiedUsing: signer)
-        return payload.payload.userEmail
+        do {
+            let payload = try JWT<AccessTokenPayload>(from: bearer.token, verifiedUsing: signer)
+            return payload.payload.userEmail
+        } catch {
+            throw PipelineError(message: "JWT Error")
+        }
     }
     
     func authorizeAndGetUser() throws -> Future<User> {
