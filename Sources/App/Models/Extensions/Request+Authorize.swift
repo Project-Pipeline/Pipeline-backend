@@ -17,18 +17,24 @@ extension Request {
         }
         let key = try readStringFromFile(named: "jwtKey.key", isPublic: false)
         let signer = JWTSigner.hs256(key: key)
-        let payload = try JWT<AccessTokenPayload>(from: bearer.token, verifiedUsing: signer)
-        return payload.payload.userEmail
+        do {
+            let payload = try JWT<AccessTokenPayload>(from: bearer.token, verifiedUsing: signer)
+            return payload.payload.userEmail
+        } catch {
+            throw PipelineError(message: "JWT Error")
+        }
     }
     
-    func authorizeAndGetUser() throws -> User {
+    func authorizeAndGetUser() throws -> Future<User> {
         let email = try authorize()
-        let client = try make(MongoClient.self)
-        let users = client.collection(for: User.self)
-        guard let user = try users.find().filter({ $0.email == email }).first else {
-            throw PipelineError(message: "User \(email) does not exist")
-        }
-        return user
+        return User.query(on: self)
+            .all()
+            .flatMap { user -> Future<User> in
+                guard let user = user.filter({ $0.email == email }).first else {
+                    throw PipelineError(message: "")
+                }
+                return self.future(user)
+            }
     }
 }
 

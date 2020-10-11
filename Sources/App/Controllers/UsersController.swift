@@ -18,55 +18,51 @@ struct UsersController: RouteCollection {
         router.post("api", "user", "create") { req -> Future<ServerResponse> in
             return try req.content
                 .decode(User.self)
-                .flatMap(to: String.self) { user in
-                    let client = try req.make(MongoClient.self)
-                    let users = client.collection(for: User.self)
-                    let result = try users.insertOne(user)
-                    if let result = result {
-                        print(result)
-                    }
-                    return req.future("")
-                }
+                .flatMap(to: User.self, { $0.create(on: req) })
                 .transform(to: ServerResponse.defaultSuccess)
         }
         
         router.post("api", "user", "login") { req -> Future<JWTToken> in
             return try req.content
                 .decode(UserEmail.self)
-                .flatMap { userEmail -> Future<JWTToken> in
-                    let client = try req.make(MongoClient.self)
-                    let users = client.collection(for: User.self)
-                    guard let matchedUser = try users.find().filter({ $0.email == userEmail.email }).first else {
-                        throw PipelineError(message: "No user matching email \(userEmail.email)")
-                    }
-                    
-                    let key = try readStringFromFile(named: "jwtKey.key", isPublic: false)
-                    let payload = AccessTokenPayload(userEmail: matchedUser.email)
-                    let data = try JWT(payload: payload).sign(using: .hs256(key: key))
-                    guard let string =  String(data: data, encoding: .utf8) else {
-                        throw Abort(.internalServerError)
-                    }
-                    return req.future(JWTToken(token: string))
+                .flatMap { user -> Future<JWTToken> in
+                    return User
+                        .query(on: req)
+                        .filter(\.email == user.email)
+                        .first()
+                        .flatMap { matchedUser -> Future<JWTToken> in
+                            guard let matchedUser = matchedUser else {
+                                throw PipelineError(message: "No user matching email \(user.email)")
+                            }
+                            let key = try readStringFromFile(named: "jwtKey.key", isPublic: false)
+                            let payload = AccessTokenPayload(userEmail: matchedUser.email)
+                            let data = try JWT(payload: payload).sign(using: .hs256(key: key))
+                            guard let string =  String(data: data, encoding: .utf8) else {
+                                throw Abort(.internalServerError)
+                            }
+                            return req.future(JWTToken(token: string))
+                        }
                 }
         }
         
         router.post("api", "user", "exists") { req -> Future<UserExistence> in
             return try req.content
                 .decode(UserEmail.self)
-                .flatMap { userEmail -> Future<UserExistence> in
-                    let client = try req.make(MongoClient.self)
-                    let users = client.collection(for: User.self)
-                    let attempt = try users.find().filter({ $0.email == userEmail.email }).first
-                    let exists = attempt != nil
-                    return req.future(UserExistence(email: userEmail.email, exists: exists))
+                .flatMap { user -> Future<UserExistence> in
+                    return User.query(on: req)
+                        .filter(\.email == user.email)
+                        .first()
+                        .flatMap { attempt -> Future<UserExistence> in
+                            let exists = attempt != nil
+                            return req.future(UserExistence(email: user.email, exists: exists))
+                        }
                 }
         }
         
         // MARK: - JWT-required endpoints
         
         router.get("api", "user", "info") { req -> Future<User> in
-            let user = try req.authorizeAndGetUser()
-            return req.future(user)
+            return try req.authorizeAndGetUser()
         }
     }
 }

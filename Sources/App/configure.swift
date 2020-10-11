@@ -21,10 +21,14 @@ public func configure(_ config: inout Config, _ env: inout Environment, _ servic
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     middlewares.use(SessionsMiddleware.self)
     FeatureFlags.configureMiddlewareFrom(config: &middlewares)
-
-    let client = try MongoClient(EnvironmentConfig.shared.mongoURL)
-    let _ = client.pipelineDB()
-    client.initUsers()
-    services.register(client)
     services.register(middlewares)
+    
+    let sqlite = try SQLiteDatabase(storage: .file(path: "db.sqlite"))
+    var databases = DatabasesConfig()
+    databases.add(database: sqlite, as: .sqlite)
+    services.register(databases)
+    
+    var migrations = MigrationConfig()
+    migrations.add(model: User.self, database: .sqlite)
+    services.register(migrations)
 }

@@ -1,5 +1,5 @@
 //
-//  AccessToknePayload.swift
+//  AccessTokenPayload.swift
 //  App
 //
 //  Created by Jing Wei Li on 9/13/20.

@@ -7,6 +7,7 @@
 
 import Foundation
 import Vapor
+import FluentSQLite
 
 struct UserEmail: Codable {
     let email: String
@@ -27,6 +28,16 @@ struct User: Codable, Content {
     let industryType: String
     let industry: String
     var id: Int?
+}
+
+extension User: Model {
+    typealias Database = SQLiteDatabase
+    typealias ID = Int
+    static var idKey: IDKey = \User.id
+}
+
+extension User: Migration, Parameter {
+    
 }
 
 extension User: MongoModel {
