@@ -16,7 +16,7 @@ struct PipelineError {
     }
 }
 
-extension PipelineError: Debuggable {
+extension PipelineError: DebuggableError {
     var identifier: String {
         return message
     }

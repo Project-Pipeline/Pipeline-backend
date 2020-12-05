@@ -6,14 +6,18 @@
 //
 
 import Foundation
+import Vapor
 
 class EnvironmentConfig: Codable {
-    static var shared: EnvironmentConfig!
+    static let `default`: EnvironmentConfig = .load()
     
     let googleClientID: String
     let googleClientSecret: String
     let googleCallbackURL: String
     let mongoURL: String
+    
+    // feature flags
+    let unrestrictedCORS: Bool
     
     required public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -26,10 +30,27 @@ class EnvironmentConfig: Codable {
             throw PipelineError(message: "Incorrect mongo url format")
         }
         self.mongoURL = mongoURL
+        self.unrestrictedCORS = try container.decode(Bool.self, forKey: .unrestrictedCORS)
     }
     
-    static func load() throws -> EnvironmentConfig {
-        let file = try readFileNamed("config.json", isPublic: false)
-        return try JSONDecoder().decode(EnvironmentConfig.self, from: file)
+    private static func load() -> EnvironmentConfig {
+        do {
+            let file = try readFileNamed("config.json", isPublic: false)
+            return try JSONDecoder().decode(EnvironmentConfig.self, from: file)
+        } catch let error {
+            fatalError(error.localizedDescription)
+        }
+    }
+}
+
+extension EnvironmentConfig {
+    func configureMiddlewareFrom(app: Application) {
+        if unrestrictedCORS {
+            app.middleware.use(CORSMiddleware(configuration: CORSMiddleware.Configuration(
+                allowedOrigin: .all,
+                allowedMethods: [.GET, .POST, .PUT, .OPTIONS, .DELETE, .PATCH],
+                allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith, .userAgent, .accessControlAllowOrigin]
+            )))
+        }
     }
 }

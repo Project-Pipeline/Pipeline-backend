@@ -7,8 +7,6 @@
 
 import Foundation
 import Vapor
-import Imperial
-import Authentication
 
 struct GoogleUser: Content, UrlQueryble {
     let email: String

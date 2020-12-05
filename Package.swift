@@ -1,36 +1,35 @@
-// swift-tools-version:4.0
+// swift-tools-version:5.2
 import PackageDescription
 
 let package = Package(
     name: "PipelineBackend",
-    products: [
-        .library(name: "PipelineBackend", targets: ["App"]),
+    platforms: [
+        .macOS(.v10_15)
     ],
     dependencies: [
         // 💧 A server-side Swift web framework.
-        .package(url: "https://github.com/vapor/vapor.git", from: "3.0.0"),
-
-        // 🔵 Swift ORM (queries, models, relations, etc) built on SQLite 3.
-        .package(url: "https://github.com/vapor/fluent-sqlite.git", from: "3.0.0"),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.3.0"),
+        .package(url: "https://github.com/vapor/fluent.git", from: "4.0.0"),
+        .package(url: "https://github.com/vapor/fluent-mongo-driver.git", from: "1.0.0"),
+        .package(url: "https://github.com/vapor/jwt.git", from: "4.0.0"),
         
-        // Google OAuth
-        .package(url: "https://github.com/vapor/auth.git", from: "2.0.0"),
-        .package(url: "https://github.com/vapor-community/Imperial.git", from: "0.7.1"),
-        
-        //mongo db
-        .package(url: "https://github.com/mongodb/mongo-swift-driver.git", from: "0.1.3")
+        // oauth
+        .package(url: "https://github.com/vapor-community/Imperial.git", from: "1.0.0-beta.2"),
     ],
     targets: [
         .target(name: "App", dependencies: [
-            "FluentSQLite",
-            "Vapor",
-            "Authentication",
-            "Imperial",
-            "MongoSwift"
+            .product(name: "Fluent", package: "fluent"),
+            .product(name: "FluentMongoDriver", package: "fluent-mongo-driver"),
+            .product(name: "Vapor", package: "vapor"),
+            .product(name: "Imperial", package: "Imperial"),
+            .product(name: "JWT", package: "jwt"),
         ]),
-        .target(name: "Run", dependencies: ["App"]),
-        
-        .testTarget(name: "AppTests", dependencies: ["App"])
+        .target(name: "Run", dependencies: [
+            .target(name: "App")
+        ]),
+        .testTarget(name: "AppTests", dependencies: [
+            .target(name: "App")
+        ])
     ]
 )
 

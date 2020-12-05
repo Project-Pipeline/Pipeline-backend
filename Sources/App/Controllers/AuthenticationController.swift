@@ -7,20 +7,18 @@
 
 import Foundation
 import Vapor
-import Imperial
-import Authentication
+import ImperialGoogle
+import Fluent
 
 struct AuthenticationController: RouteCollection {
-    func boot(router: Router) throws {
-        let decoder = JSONDecoder()
-        
+    func boot(routes: RoutesBuilder) throws {
         // MARK: - OAuth: First Step
         
         guard let googleCallbackURL = Environment.get("GOOGLE_CALLBACK_URL") else {
             fatalError("Google callback URL not set")
         }
 
-        try router.oAuth(
+        try routes.oAuth(
             from: Google.self,
             authenticate: "api/googlelogin",
             callback: googleCallbackURL,
@@ -28,37 +26,31 @@ struct AuthenticationController: RouteCollection {
             completion:
         { request, _ in
             // this closure is never called
-            return request.future("")
+            return request.eventLoop.future("")
         })
         
         // MARK: - OAuth: 2nd and 3rd step
         
-        router.get("api/login") { req -> Future<Response> in
+        routes.get("api", "login") { req -> EventLoopFuture<Response> in
             guard let code = req.query[String.self, at: "code"],
                 let secondAuth = SecondAuth(code: code) else {
                 throw Abort(.internalServerError)
             }
             return try req
-                .client()
+                .client
                 .post("https://www.googleapis.com/oauth2/v4/token", headers: HTTPHeaders(), beforeSend: { req in
-                    try req.content.encode(secondAuth)
+                    try req.content.encode(secondAuth, as: .json)
                 })
-                .flatMap { response -> Future<Response> in
-                    guard let json = response.jsonString()?.data(using: .utf8) else {
-                        throw Abort(.internalServerError)
-                    }
-                    let accessToken = try decoder.decode(GoogleAccessToken.self, from: json)
-                    return try req.client().get(
+                .decodeResponse(typed: GoogleAccessToken.self) { accessToken -> EventLoopFuture<ClientResponse> in
+                    req.client.get(
                         "https://www.googleapis.com/oauth2/v1/userinfo?access_token=\(accessToken.accessToken)",
                         headers: HTTPHeaders([("Authorization","Bearer \(accessToken.accessToken)")]))
                 }
-                .flatMap { response -> Future<Response> in
-                    guard let json = response.jsonString()?.data(using: .utf8) else {
-                        throw Abort(.internalServerError)
+                .decodeResponse(typed: GoogleUser.self) { user in
+                    guard let params = try? user.queryParameters() else {
+                        return req.eventLoop.future(Response(status: .badRequest))
                     }
-                    let user = try decoder.decode(GoogleUser.self, from: json)
-                    let params = try user.queryParameters()
-                    return req.future(req.redirect(to: "http://localhost:4200/logindetails\(params)"))
+                    return req.eventLoop.future(req.redirect(to: "http://localhost:4200/logindetails\(params)"))
                 }
         }
     }

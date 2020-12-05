@@ -10,7 +10,8 @@ The backend code for Project Pipeline
         "googleClientID": "your client id",
         "googleClientSecret": "your client secret",
         "googleCallbackURL": "your callback url",
-        "mongoURL": "your mongo url in base64 encoded form"
+        "mongoURL": "your mongo url in base64 encoded form",
+        "unrestrictedCORS": "true/false"
     }
 ```
 * Run `source setup.sh` to setup the essential environmental variables for this project.

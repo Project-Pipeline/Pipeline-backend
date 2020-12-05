@@ -7,8 +7,9 @@
 
 import JWT
 import Foundation
+import Vapor
 
-struct AccessTokenPayload: JWTPayload {
+struct AccessTokenPayload: JWTPayload, Authenticatable {
     
     var issuer: IssuerClaim
     var issuedAt: IssuedAtClaim
