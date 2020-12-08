@@ -8,33 +8,22 @@
 import Foundation
 import Vapor
 import JWT
-import MongoSwift
+import Fluent
 
 extension Request {
+    /// Returns the user's email
     func authorize() throws -> String {
-        guard let bearer = self.http.headers.bearerAuthorization else {
-            throw Abort(.unauthorized)
-        }
-        let key = try readStringFromFile(named: "jwtKey.key", isPublic: false)
-        let signer = JWTSigner.hs256(key: key)
-        do {
-            let payload = try JWT<AccessTokenPayload>(from: bearer.token, verifiedUsing: signer)
-            return payload.payload.userEmail
-        } catch {
-            throw PipelineError(message: "JWT Error")
-        }
+        let payload = try jwt.verify(as: AccessTokenPayload.self)
+        return payload.userEmail
     }
     
-    func authorizeAndGetUser() throws -> Future<User> {
+    func authorizeAndGetUser() throws -> EventLoopFuture<User> {
         let email = try authorize()
-        return User.query(on: self)
-            .all()
-            .flatMap { user -> Future<User> in
-                guard let user = user.filter({ $0.email == email }).first else {
-                    throw PipelineError(message: "")
-                }
-                return self.future(user)
-            }
+        return User
+            .query(on: db)
+            .filter(\.$email == email)
+            .first()
+            .unwrap(or: PipelineError(message: "No user matching email \(email)"))
     }
 }
 

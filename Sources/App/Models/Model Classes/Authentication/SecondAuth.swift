@@ -6,8 +6,6 @@
 //
 
 import Vapor
-import Imperial
-import Authentication
 import Foundation
 
 struct SecondAuth: Codable, Content {

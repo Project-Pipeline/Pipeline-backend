@@ -8,7 +8,7 @@
 import Foundation
 import Vapor
 
-struct GoogleAccessToken: Codable {
+struct GoogleAccessToken: Content {
     let accessToken: String
     let expiresIn: Int
     let scope: String

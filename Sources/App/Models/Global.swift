@@ -30,7 +30,18 @@ func deleteFileNamed(_ name: String, isPublic: Bool) throws {
     try FileManager.default.removeItem(at: url)
 }
 
+// MARK: - PWD
+
+/// Wrapper for the vapor's current working directory
+class PWDWrapper {
+    fileprivate static var pwd: String = ""
+    
+    static func setPWD(with app: Application) {
+        self.pwd = app.directory.workingDirectory
+    }
+}
+
 /// Vapor's current working directory, available to have files written to it.
 func pwd() -> URL {
-    return URL(fileURLWithPath: DirectoryConfig.detect().workDir)
+    return URL(fileURLWithPath: PWDWrapper.pwd)
 }
