@@ -1,3 +1,5 @@
+[![Build](https://github.com/Project-Pipeline/Pipeline-backend/workflows/CI/badge.svg)](https://github.com/Project-Pipeline/Pipeline-backend/actions)
+
 # Pipeline Backend
 
 The backend code for Project Pipeline
