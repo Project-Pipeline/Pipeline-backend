@@ -1,0 +1,19 @@
+name: Slack Notifiction PR
+on:
+    pull_request:
+        branches: [ master ]
+jobs:
+    slackNotification:
+        name: Slack Notification
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+            - name: Slack Notification
+              uses: rtCamp/action-slack-notify@v2
+              env:
+                  SLACK_CHANNEL: backend-development
+                  SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+                  SLACK_COLOR: '#3278BD'
+                  SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+                  SLACK_MESSAGE: 'A Pull Request had been created/updated'
+                  SLACK_TITLE: Message
