@@ -41,16 +41,30 @@ struct AuthenticationController: RouteCollection {
                 .post("https://www.googleapis.com/oauth2/v4/token", headers: HTTPHeaders(), beforeSend: { req in
                     try req.content.encode(secondAuth, as: .json)
                 })
-                .decodeResponse(typed: GoogleAccessToken.self) { accessToken -> EventLoopFuture<ClientResponse> in
-                    req.client.get(
-                        "https://www.googleapis.com/oauth2/v1/userinfo?access_token=\(accessToken.accessToken)",
-                        headers: HTTPHeaders([("Authorization","Bearer \(accessToken.accessToken)")]))
+                .decodeResponse(typed: GoogleAccessToken.self) { req.eventLoop.future($0) }
+                .flatMapThrowing { token -> EventLoopFuture<[ClientResponse]> in
+                    let tokenData = try JSONEncoder().encode(IdTokenWrapper(idToken: token.idToken))
+                    return req.eventLoop.flatten([
+                        req.client.get(
+                            "https://www.googleapis.com/oauth2/v1/userinfo?access_token=\(token.accessToken)",
+                            headers: HTTPHeaders([("Authorization","Bearer \(token.accessToken)")])),
+                        req.eventLoop.future(ClientResponse(
+                                status: .ok,
+                                headers: HTTPHeaders([("Content-Type", "application/json")]),
+                                body: ByteBuffer(data: tokenData)))
+                    ])
                 }
-                .decodeResponse(typed: GoogleUser.self) { user in
-                    guard let params = try? user.queryParameters() else {
-                        return req.eventLoop.future(Response(status: .badRequest))
+                .flatMap { $0 }
+                .flatMapThrowing { responses -> (String, String) in
+                    guard let first = responses.first, let last = responses.last else {
+                        throw Abort(.internalServerError)
                     }
-                    return req.eventLoop.future(req.redirect(to: "http://localhost:4200/logindetails\(params)"))
+                    let userInfo = try (try first.content.decode(GoogleUser.self)).queryParameters()
+                    let idToken = try last.content.decode(IdTokenWrapper.self)
+                    return (userInfo, idToken.idToken)
+                }
+                .flatMap { result in
+                    return req.eventLoop.future(req.redirect(to: "http://localhost:4200/logindetails\(result.0)&idToken=\(result.1)"))
                 }
         }
     }

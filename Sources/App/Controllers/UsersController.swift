@@ -21,22 +21,6 @@ struct UsersController: RouteCollection {
                 .transform(to: ServerResponse.defaultSuccess)
         }
         
-        routes.post("api", "user", "login") { req -> EventLoopFuture<JWTToken> in
-            let email = try req.content.decode(UserEmail.self)
-            return User
-                .query(on: req.db)
-                .filter(\.$email == email.email)
-                .first()
-                .unwrap(orError: PipelineError(message: "No user matching email \(email.email)"))
-                .flatMapThrowing { user -> String in
-                    let payload = AccessTokenPayload(userEmail: user.email)
-                    return try req.jwt.sign(payload)
-                }
-                .flatMap { token -> EventLoopFuture<JWTToken> in
-                    return req.eventLoop.future(JWTToken(token: token))
-                }
-        }
-        
         routes.post("api", "user", "exists") { req -> EventLoopFuture<UserExistence> in
             let email = try req.content.decode(UserEmail.self)
             return User
