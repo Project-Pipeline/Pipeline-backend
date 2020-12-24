@@ -15,5 +15,5 @@ jobs:
                   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
                   SLACK_COLOR: '#32BD77'
                   SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-                  SLACK_MESSAGE: 'A branch had been merged / pushed to master'
-                  SLACK_TITLE: Message
+                  SLACK_MESSAGE: ${{github.event.head_commit.message}}
+                  SLACK_TITLE: A branch had been merged / pushed to master with this message:
