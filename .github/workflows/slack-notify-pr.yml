@@ -22,4 +22,4 @@ jobs:
                   SLACK_COLOR: '#3278BD'
                   SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
                   SLACK_MESSAGE: ${{ steps.extract_branch.outputs.branch }}
-                  SLACK_TITLE: ${{ github.event.repository.name }} A Pull Request had been created/updated on this branch:
+                  SLACK_TITLE: ${{ github.event.repository.name }} A Pull Request had been created/updated on this branch
