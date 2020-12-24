@@ -22,7 +22,7 @@ extension Request {
             .flatMapThrowing { token in
                 guard let clientID = Environment.get("GOOGLE_CLIENT_ID"),
                       token.aud == clientID,
-                      let email = token.email else {
+                      let email = token.emxail else {
                     throw Abort(.unauthorized)
                 }
                 return email
