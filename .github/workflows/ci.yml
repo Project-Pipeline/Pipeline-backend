@@ -26,8 +26,8 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: '#32BD77'
           SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-          SLACK_MESSAGE: ${{ github.sha }}
-          SLACK_TITLE: ${{ github.event.repository.name }} Build succeeded on this commit
+          SLACK_MESSAGE: Build succeeded on this repository
+          SLACK_TITLE: ${{ github.event.repository.name }}
       
   build_failed_notify:
     runs-on: ubuntu-latest
@@ -41,6 +41,6 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: '#FF0000'
           SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
-          SLACK_MESSAGE: ${{ github.sha }}
-          SLACK_TITLE: ${{ github.event.repository.name }} Build failed on this commit
+          SLACK_MESSAGE: Build failed on this repository
+          SLACK_TITLE: ${{ github.event.repository.name }}
     
