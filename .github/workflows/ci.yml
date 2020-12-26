@@ -8,10 +8,39 @@ on:
 
 jobs:
   build:
-
     runs-on: macos-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Build
       run: swift build -v
+  
+  build_succeeded_notify:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ success() }}
+    steps:
+      - name: build has succceeded
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: build
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: '#32BD77'
+          SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          SLACK_MESSAGE: Build succeeded on this repository
+          SLACK_TITLE: ${{ github.event.repository.name }}
+      
+  build_failed_notify:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ failure() }}
+    steps:
+      - name: build has failed
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: build
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: '#FF0000'
+          SLACK_ICON: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
+          SLACK_MESSAGE: Build failed on this repository
+          SLACK_TITLE: ${{ github.event.repository.name }}
+    

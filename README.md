@@ -5,8 +5,7 @@
 The backend code for Project Pipeline
 
 ## Notes
-* for JWT to work, you need to manually add a jwt token `jwtKey.key` (ignored by git) to the project's directory.
-* add a `config.json` containing the following:
+* For the app to work you must add a  `config.json`  (ignored by git) containing the following contents to the project's directory.
 ```json
     {
         "googleClientID": "your client id",

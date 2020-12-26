@@ -24,10 +24,6 @@ public func configure(_ app: Application) throws {
         app.migrations.add(migratable.createMigration())
     }
     
-    // JWT
-    let key = try readStringFromFile(named: "jwtKey.key", isPublic: false)
-    app.jwt.signers.use(.hs256(key: key))
-    
     // MISC
     app.logger.logLevel = .error
     
