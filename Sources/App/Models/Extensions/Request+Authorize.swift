@@ -27,6 +27,10 @@ extension Request {
                 }
                 return email
             }
+            .flatMapErrorThrowing { error in
+                PPL_LOG_ERROR(.invalidJWT, error)
+                throw "malformed JWT"
+            }
     }
     
     func authorizeAndGetUser() throws -> EventLoopFuture<User> {
