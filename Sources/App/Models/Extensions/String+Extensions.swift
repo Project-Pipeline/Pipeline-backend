@@ -17,3 +17,14 @@ extension String: LocalizedError {
     }
 }
 
+extension String {
+    func base64Decoded() throws -> String {
+        if let decodedData = Data(base64Encoded: self.trimmingCharacters(in: .newlines)),
+            let decodedString = String(data: decodedData, encoding: .utf8) {
+            return decodedString.trimmingCharacters(in: .newlines)
+        } else {
+            throw "Unable to decode base64 string"
+        }
+    }
+}
+

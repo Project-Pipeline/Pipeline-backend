@@ -9,11 +9,13 @@ public func configure(_ app: Application) throws {
     app.middleware.use(ErrorMiddleware.default(environment: app.environment))
     app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
     app.middleware.use(app.sessions.middleware)
-    EnvironmentConfig.default.configureMiddlewareFrom(app: app)
+    
+    let environmentConfig: EnvironmentConfigType = appContainer.resolve(EnvironmentConfigType.self)
+    environmentConfig.configureMiddlewareFrom(app: app)
     
     // Configure MongoDB
     //app.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
-    try app.databases.use(.mongo(connectionString: EnvironmentConfig.default.mongoURL), as: .mongo)
+    try app.databases.use(.mongo(connectionString: environmentConfig.mongoURL), as: .mongo)
     
     // Configure migrations
     let migratables: [Migratable.Type] = [

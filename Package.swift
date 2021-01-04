@@ -15,6 +15,9 @@ let package = Package(
         
         // oauth
         .package(url: "https://github.com/vapor-community/Imperial.git", from: "1.0.0-beta.2"),
+        
+        // Dependency Injection
+        .package(url: "https://github.com/Swinject/Swinject.git", from: "2.7.1")
     ],
     targets: [
         .target(name: "App", dependencies: [
@@ -23,6 +26,7 @@ let package = Package(
             .product(name: "Vapor", package: "vapor"),
             .product(name: "Imperial", package: "Imperial"),
             .product(name: "JWT", package: "jwt"),
+            .product(name: "Swinject", package: "Swinject")
         ]),
         .target(name: "Run", dependencies: [
             .target(name: "App")
