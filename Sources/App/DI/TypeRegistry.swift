@@ -9,6 +9,8 @@ import Foundation
 import Vapor
 import Swinject
 
+/// Dependency Injection Entry Point
+/// - Register a protocol and its implementation here
 let appContainer: Container = {
     let container = Container()
     container.register(EnvironmentConfigType.self) { _ in EnvironmentConfig.load() }

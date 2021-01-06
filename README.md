@@ -12,6 +12,7 @@ The backend code for Project Pipeline
         "googleClientSecret": "your client secret",
         "googleCallbackURL": "your callback url",
         "mongoURL": "your mongo url in base64 encoded form",
+        "cloudinaryAPISecret": "cloudinary API secret",
         "unrestrictedCORS": "true/false"
     }
 ```
