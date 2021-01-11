@@ -26,5 +26,15 @@ extension String {
             throw "Unable to decode base64 string"
         }
     }
+    
+    func toJSONTyped<T: Codable>(_ t: T.Type, jsonHelper: PipelineJSONHelperType = appContainer.resolve()) -> T? {
+        guard let data = self.data(using: .utf8) else {
+            return nil
+        }
+        guard let result = try? jsonHelper.decoder.decode(T.self, from: data) else {
+            return nil
+        }
+        return result
+    }
 }
 

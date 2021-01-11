@@ -11,14 +11,23 @@ import JWT
 import Fluent
 
 extension Request {
-    /// Returns the user's email asynchronously by making a call to google's tokenInfo endpoint
+    /// Ensures the user has the permission to access the site.
+    /// - Returns: Returns the user's email asynchronously by making a call to google's tokenInfo endpoint
     func authorize() throws -> EventLoopFuture<String> {
         guard let idToken = headers.bearerAuthorization?.token else {
             throw Abort(.unauthorized)
         }
+        return try authorizeWithToken(idToken, client: client, eventLoop: eventLoop)
+    }
+    
+    func authorize(with token: String) throws -> EventLoopFuture<String> {
+        try authorizeWithToken(token, client: client, eventLoop: eventLoop)
+    }
+    
+    private func authorizeWithToken(_ token: String, client: Client, eventLoop: EventLoop) throws -> EventLoopFuture<String> {
         return try client
-            .get("https://oauth2.googleapis.com/tokeninfo?id_token=\(idToken)")
-            .decodeResponse(typed: IdTokenPayload.self) { self.eventLoop.future($0) }
+            .get("https://oauth2.googleapis.com/tokeninfo?id_token=\(token)")
+            .decodeResponse(typed: IdTokenPayload.self) { eventLoop.future($0) }
             .flatMapThrowing { token in
                 guard let clientID = Environment.get("GOOGLE_CLIENT_ID"),
                       token.aud == clientID,
@@ -32,6 +41,7 @@ extension Request {
                 throw "malformed JWT"
             }
     }
+
     
     func authorize<T>(_ next: @escaping (String) -> EventLoopFuture<T>) throws -> EventLoopFuture<T> {
         try authorize().flatMap { next($0) }
