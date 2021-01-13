@@ -9,8 +9,8 @@ import Foundation
 import Vapor
 
 class WebSocketManager {
-    var eventLoop: EventLoop
-    var storage: [UUID: ActiveConversation]
+    private var eventLoop: EventLoop
+    private var storage: [UUID: ActiveConversation]
     private var jsonHelper: PipelineJSONHelperType
     
     var active: [WebSocket] {
@@ -32,10 +32,11 @@ class WebSocketManager {
     
     func add(_ id: UUID, convo: ActiveConversation) {
         storage[id] = convo
-    }
-    
-    func remove(_ id: UUID) {
-        storage[id] = nil
+        convo.onAllClientsDisconnectCallback = { [weak self] convo in
+            if let pair = self?.storage.first(where: { $0.value === convo }) {
+                self?.storage.removeValue(forKey: pair.key)
+            }
+        }
     }
     
     func find(_ uuid: UUID) -> ActiveConversation? {
@@ -83,18 +84,38 @@ extension ByteBuffer {
 }
 
 class ActiveConversation {
-    var activeSockets: [WebSocket]
-    var activeUsers: [UUID]
+    var active: [(UUID, WebSocket)]
+    
+    var activeSockets: [WebSocket] {
+        active.map { $0.1 }
+    }
+    
+    var onAllClientsDisconnectCallback: ((ActiveConversation) -> Void)?
     
     init(initiator: WebSocket, originatingUserID: UUID) {
-        activeSockets = [initiator]
-        activeUsers = [originatingUserID]
+        active = [(originatingUserID, initiator)]
+        handleSocketClose(ws: initiator)
     }
     
     func addClient(_ client: WebSocket, originatingUserID: UUID) {
-        if !activeUsers.contains(originatingUserID) {
-            activeSockets.append(client)
-            activeUsers.append(originatingUserID)
+        if !active.map({ $0.0 }).contains(originatingUserID) {
+            active.append((originatingUserID, client))
+        }
+        handleSocketClose(ws: client)
+    }
+    
+    private func handleSocketClose(ws: WebSocket) {
+        ws.onClose.whenComplete { [weak self] res in
+            guard let self = self else { return }
+            switch res {
+            case .success(_):
+                self.active.removeAll(where: { $0.1 === ws })
+                if self.active.isEmpty {
+                    self.onAllClientsDisconnectCallback?(self)
+                }
+            case .failure(let error):
+                PPL_LOG_ERROR(.websocketDisconnectError, error)
+            }
         }
     }
 }

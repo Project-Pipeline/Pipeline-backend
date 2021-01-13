@@ -23,15 +23,14 @@ struct ConversationParticipantInfo: Content {
     let firstName: String
     let lastName: String
     let profileImageURL: URL
+    /// id of each individual user, identical to the id in the users db
+    let userID: UUID
 }
 
 /// Base class of a conversation. Intended to be decoded from a json
 final class Conversation: Content, Model {
     @ID
     var id: UUID?
-    /// ids of all users involced in the conversation
-    @Field(key: "participants")
-    var participants: [UUID]
     @Field(key: "entries")
     var entries: [ConversationEntry]
     @Field(key: "participantInfo")

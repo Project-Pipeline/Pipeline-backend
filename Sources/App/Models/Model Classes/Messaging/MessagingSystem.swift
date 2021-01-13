@@ -18,7 +18,7 @@ class MessagingSystem {
     }
     
     func connect(ws: WebSocket) {
-        ws.onText {  [weak self] ws, string in
+        ws.onText { [weak self] ws, string in
             guard let self = self else { return }
             
             // MARK: - connecting for the second time and onward

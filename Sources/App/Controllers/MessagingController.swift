@@ -21,7 +21,10 @@ struct MessagingController: RouteCollection {
                 .authorize()
                 .flatMap { _ in
                     // first, add the message id to all participating users
-                    MessagingHelper.addMessageID(messageID, toUsers: convo.participants, on: req)
+                    MessagingHelper.addMessageID(
+                        messageID,
+                        toUsers: convo.participantsInfo.map { $0.userID },
+                        on: req)
                 }
                 .flatMap { _ in
                     // second, save the conversation in its standalone database
