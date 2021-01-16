@@ -35,33 +35,4 @@ public func configure(_ app: Application) throws {
     app.routes.defaultMaxBodySize = "50mb"
     
     try routes(app)
-    
-    /*
-    app.get("api", "update-users") { req -> EventLoopFuture<ServerResponse> in
-        User.query(on: req.db)
-            .all()
-            .flatMap { users -> EventLoopFuture<[Void]> in
-                let fututres = users.map { user -> EventLoopFuture<Void> in
-                    user.messages = []
-                    return user.save(on: req.db)
-                }
-                return req.eventLoop.flatten(fututres)
-            }
-            .transform(to: ServerResponse.defaultSuccess)
-    }
-     */
-    let messagingSystem = MessagingSystem(app: app)
-    app.webSocket("api", "messaging") { req, ws in
-        guard let token = try? req.queryParam(named: "token", type: String.self) else { return }
-        try? req
-            .authorize(with: token)
-            .whenComplete { res in
-                switch res {
-                case .success(_):
-                    messagingSystem.connect(ws: ws)
-                case .failure(let error):
-                    print(error.localizedDescription)
-                }
-            }
-    }
 }

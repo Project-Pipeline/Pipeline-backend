@@ -7,11 +7,16 @@
 
 import Foundation
 import Vapor
+import Fluent
 
 class WebSocketManager {
     private var eventLoop: EventLoop
+    /// identified by conversation's id
     private var storage: [UUID: ActiveConversation]
+    /// identified by conversation's id
+    private var ongoingMessages: [UUID: [ConversationEntry]]
     private var jsonHelper: PipelineJSONHelperType
+    private var db: Database
     
     var active: [WebSocket] {
         allWebSockets().filter { !$0.isClosed }
@@ -22,19 +27,24 @@ class WebSocketManager {
     }
     
     init(eventLoop: EventLoop,
+         database: Database,
          jsonHelper: PipelineJSONHelperType = appContainer.resolve(),
          conversations: [UUID: ActiveConversation] = [:])
     {
         self.eventLoop = eventLoop
         storage = conversations
         self.jsonHelper = jsonHelper
+        ongoingMessages = [:]
+        self.db = database
     }
     
     func add(_ id: UUID, convo: ActiveConversation) {
         storage[id] = convo
         convo.onAllClientsDisconnectCallback = { [weak self] convo in
             if let pair = self?.storage.first(where: { $0.value === convo }) {
-                self?.storage.removeValue(forKey: pair.key)
+                let convesrationID = pair.key
+                self?.storage.removeValue(forKey: convesrationID)
+                self?.uploadMessages(for: convesrationID)
             }
         }
     }
@@ -52,6 +62,14 @@ class WebSocketManager {
                 }
                 socket.send(str)
             }
+            // maintain ongoing conversations
+            if let messages = ongoingMessages[id] {
+                var new = messages
+                new.append(message)
+                ongoingMessages[id] = new
+            } else {
+                ongoingMessages[id] = [message]
+            }
         }
     }
     
@@ -64,6 +82,35 @@ class WebSocketManager {
         storage.values
             .map { $0.activeSockets }
             .reduce([], +)
+    }
+    
+    /// upload the ongoing msgs to db, then remove ongoing msgs from storage
+    private func uploadMessages(for id: UUID) {
+        guard let messages = ongoingMessages[id], !messages.isEmpty else {
+            ongoingMessages.removeValue(forKey: id)
+            return
+        }
+        eventLoop
+            .flatten([
+                Conversation.find(id, on: db)
+                    .unwrap(or: Abort(.badRequest))
+                    .flatMap { convo -> EventLoopFuture<Void> in
+                        convo.entries.append(contentsOf: messages)
+                        let latestTimestamp = messages.map { $0.timeStamp }.max() ?? 0
+                        if latestTimestamp > convo.modified {
+                            convo.modified = latestTimestamp
+                        }
+                        return convo.save(on: self.db)
+                    }
+            ])
+            .whenComplete { [weak self] status in
+                switch status {
+                case .success(_):
+                    self?.ongoingMessages.removeValue(forKey: id)
+                case .failure(let error):
+                    PPL_LOG_ERROR(.generic, error)
+                }
+            }
     }
 }
 

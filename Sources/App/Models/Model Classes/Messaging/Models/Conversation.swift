@@ -11,10 +11,10 @@ import Fluent
 
 /// A single message
 struct ConversationEntry: Content {
-    let id: UUID
     let timeStamp: Int
     let text: String?
     let imageURL: URL?
+    let fileURL: URL?
     let senderUserID: UUID
     let conversationBelongedTo: UUID
 }
@@ -35,6 +35,10 @@ final class Conversation: Content, Model {
     var entries: [ConversationEntry]
     @Field(key: "participantInfo")
     var participantsInfo: [ConversationParticipantInfo]
+    @Field(key: "created")
+    var created: Int
+    @Field(key: "modified")
+    var modified: Int
 }
 
 extension Conversation: Migratable {
@@ -50,7 +54,9 @@ extension Conversation: Migratable {
         [
             .init("participants", .string),
             .init("entries", .array(of: .dictionary)),
-            .init("participant-info", .array(of: .dictionary))
+            .init("participantInfo", .array(of: .dictionary)),
+            .init("created", .int),
+            .init("modified", .int)
         ]
     }
 }

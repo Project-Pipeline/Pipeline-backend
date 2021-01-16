@@ -9,6 +9,7 @@ import Foundation
 
 /// Reference: https://project-pipeline.atlassian.net/wiki/spaces/DEV/pages/70123575/Backend+Error+Codes
 enum PipelineErrorCode: Int {
+    case generic = -1
     case invalidJWT = 0
     case websocketDisconnectError = 1
 }
