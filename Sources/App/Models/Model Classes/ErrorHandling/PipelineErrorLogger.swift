@@ -12,6 +12,7 @@ enum PipelineErrorCode: Int {
     case generic = -1
     case invalidJWT = 0
     case websocketDisconnectError = 1
+    case unableToSendMessage = 2
 }
 
 private let dateFormatter: DateFormatter = {

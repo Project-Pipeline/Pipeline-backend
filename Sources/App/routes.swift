@@ -19,6 +19,7 @@ public func routes(_ app: Application) throws {
                 switch res {
                 case .success(_):
                     messagingSystem.connect(ws: ws)
+                    try? ws.acknowledgeConnectionEstablished()
                 case .failure(let error):
                     PPL_LOG_ERROR(.generic, error)
                 }

@@ -22,10 +22,9 @@ class MessagingSystem {
             
             // MARK: - connecting 
             if let connect = string.toJSONTyped(MessagingConnect.self) {
-                print("connecting")
                 if let activeConversation = self.websocketManager.find(connect.conversationID) {
                     // conversation already exists
-                    activeConversation.addClient(ws, originatingUserID: connect.originatingUserID)
+                    activeConversation.addClient(ws, connect: connect)
                    
                 } else {
                     // conversation DNE

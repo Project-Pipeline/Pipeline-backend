@@ -9,6 +9,7 @@ import Foundation
 import Vapor
 import Fluent
 
+// MARK: - Web Socket Manager
 class WebSocketManager {
     private var eventLoop: EventLoop
     /// identified by conversation's id
@@ -38,8 +39,12 @@ class WebSocketManager {
         self.db = database
     }
     
+    /// Conversation hasn't existed before
     func add(_ id: UUID, convo: ActiveConversation) {
         storage[id] = convo
+        convo.onClientJoinCallback = { [weak self] ws, id in
+            self?.handleClientJoin(id: id, ws: ws)
+        }
         convo.onAllClientsDisconnectCallback = { [weak self] convo in
             if let pair = self?.storage.first(where: { $0.value === convo }) {
                 let convesrationID = pair.key
@@ -55,12 +60,8 @@ class WebSocketManager {
     
     func send(message: ConversationEntry, to id: UUID) throws {
         if let convo = find(id) {
-            try convo.activeSockets.forEach { socket in
-                let data = try jsonHelper.encoder.encode(message)
-                guard let str = String(data: data, encoding: .utf8) else {
-                    throw Abort(.internalServerError)
-                }
-                socket.send(str)
+            try convo.activeSockets.forEach { [weak self] socket in
+                try self?.send(message: message, to: socket)
             }
             // maintain ongoing conversations
             if let messages = ongoingMessages[id] {
@@ -76,6 +77,14 @@ class WebSocketManager {
     deinit {
         let futures = allWebSockets().map { $0.close() }
         try! eventLoop.flatten(futures).wait()
+    }
+    
+    private func send(message: ConversationEntry, to socket: WebSocket) throws {
+        let data = try jsonHelper.encoder.encode(message)
+        guard let str = String(data: data, encoding: .utf8) else {
+            throw Abort(.internalServerError)
+        }
+        socket.send(str)
     }
     
     private func allWebSockets() -> [WebSocket] {
@@ -112,6 +121,21 @@ class WebSocketManager {
                 }
             }
     }
+    
+    /// When one client joins, we should send the messages already
+    /// in the buffer (could be sent by someone else) to the client
+    private func handleClientJoin(id: UUID, ws: WebSocket) {
+        guard let msgs = ongoingMessages[id], !msgs.isEmpty else {
+            return
+        }
+        do {
+            try msgs.forEach { [weak self] msg in
+                try self?.send(message: msg, to: ws)
+            }
+        } catch let err {
+            PPL_LOG_ERROR(.unableToSendMessage, err)
+        }
+    }
 }
 
 extension ByteBuffer {
@@ -130,6 +154,8 @@ extension ByteBuffer {
     }
 }
 
+// MARK: - Active Covnersation
+
 class ActiveConversation {
     var active: [(UUID, WebSocket)]
     
@@ -137,20 +163,25 @@ class ActiveConversation {
         active.map { $0.1 }
     }
     
+    /// When all clients disconnect we should remove them from memory and upload the messages to db
     var onAllClientsDisconnectCallback: ((ActiveConversation) -> Void)?
+    /// When one client joins, we should send the messages already in the buffer (could be sent by someone else) to the client
+    var onClientJoinCallback: ((WebSocket, UUID) -> Void)?
     
     init(initiator: WebSocket, originatingUserID: UUID) {
         active = [(originatingUserID, initiator)]
         handleSocketClose(ws: initiator)
     }
     
-    func addClient(_ client: WebSocket, originatingUserID: UUID) {
-        if !active.map({ $0.0 }).contains(originatingUserID) {
-            active.append((originatingUserID, client))
+    func addClient(_ client: WebSocket, connect: MessagingConnect) {
+        if !active.map({ $0.0 }).contains(connect.originatingUserID) {
+            active.append((connect.originatingUserID, client))
         }
+        onClientJoinCallback?(client, connect.conversationID)
         handleSocketClose(ws: client)
     }
     
+    /// When socket closes, remove them from memory
     private func handleSocketClose(ws: WebSocket) {
         ws.onClose.whenComplete { [weak self] res in
             guard let self = self else { return }
