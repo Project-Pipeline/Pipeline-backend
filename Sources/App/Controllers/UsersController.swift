@@ -32,10 +32,35 @@ struct UsersController: RouteCollection {
                 }
         }
         
-        // MARK: - JWT-required endpoints
+        // MARK: - Authorization-required endpoints
         
         routes.get("api", "user", "info") { req -> EventLoopFuture<User> in
             return try req.authorizeAndGetUser()
+        }
+        
+        routes.get("api", "user", "search") { req -> EventLoopFuture<[User]> in
+            let method = try req.queryParam(named: "method", type: String.self)
+            let query = try req.queryParam(named: "query", type: String.self)
+            
+            return try req
+                .authorize()
+                .flatMap { _ in
+                    guard let searchMethod = UserSearchMethod(rawValue: method) else {
+                        return req.eventLoop.future([])
+                    }
+                    switch searchMethod {
+                    case .email:
+                        return User.query(on: req.db)
+                            .filter(\.$email =~ query) // =~ is the contains operator
+                            .all()
+                    case .name:
+                        return User.query(on: req.db)
+                            .group(.or) {
+                                $0.filter(\.$givenName =~ query).filter(\.$familyName =~ query)
+                            }
+                            .all()
+                    }
+                }
         }
     }
 }

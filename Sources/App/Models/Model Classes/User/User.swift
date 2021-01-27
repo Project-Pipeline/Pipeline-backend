@@ -37,6 +37,8 @@ final class User: Codable, Content, Model {
     var industryType: String
     @Field(key: "industry")
     var industry: String
+    @Field(key: "messages")
+    var messages: [UUID]
 }
 
 // MARK: - Migration
@@ -60,6 +62,12 @@ extension User: Migratable {
             .init("entityName", .string),
             .init("industryType", .string),
             .init("industry", .string),
+            .init("messages", .array(of: .uuid))
         ]
     }
+}
+
+enum UserSearchMethod: String {
+    case email = "email"
+    case name = "name"
 }

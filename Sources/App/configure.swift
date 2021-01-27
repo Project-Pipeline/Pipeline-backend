@@ -19,7 +19,8 @@ public func configure(_ app: Application) throws {
     
     // Configure migrations
     let migratables: [Migratable.Type] = [
-        User.self
+        User.self,
+        Conversation.self,
     ]
     
     migratables.forEach { migratable in
