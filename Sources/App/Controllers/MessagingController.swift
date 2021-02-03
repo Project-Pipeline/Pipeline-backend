@@ -37,6 +37,10 @@ struct MessagingController: RouteCollection {
             let messageIDs = try req.content
                 .decode(StringArray.self).values
                 .compactMap { UUID(uuidString: $0) }
+            if messageIDs.isEmpty {
+                return req.eventLoop.future([])
+            }
+            
             return try req
                 .authorize()
                 .flatMap { str -> EventLoopFuture<[Conversation]> in
