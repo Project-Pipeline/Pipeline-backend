@@ -28,12 +28,10 @@ final class UserDetails: Content, Model {
     @Field(key: "additional-info")
     var additionalInfo: [DescriptionDetailPair]
     // MARK: - Entity Only
-    @Field(key: "latitude")
-    var latitude: Double?
-    @Field(key: "longitude")
-    var longitude: Double?
     @Field(key: "date-founded")
     var dateFounded: Date?
+    @Field(key: "address")
+    var address: Address?
     // MARK: - Individual Only
     @Field(key: "dob")
     var dob: Date?
@@ -46,6 +44,13 @@ final class UserDetails: Content, Model {
 struct DescriptionDetailPair: Content {
     let description: String
     let detail: String
+}
+
+struct Address {
+    let components: [String]
+    let latitude: Double
+    let longitude: Double
+    let postalCode: String?
 }
 
 // MARK: - Migrations
@@ -66,9 +71,8 @@ extension UserDetails: Migratable {
             .init("phone-numbers", .array(of: .dictionary)),
             .init("background-image", .string),
             .init("additional-info", .array(of: .dictionary)),
-            .init("latitude", .int64),
-            .init("longitude", .int64),
             .init("date-founded", .date),
+            .init("address", .dictionary),
             .init("dob", .date),
             .init("gender", .int64),
             .init("profession", .string)

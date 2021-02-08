@@ -37,11 +37,13 @@ final class User: Codable, Content, Model {
     var industryType: String
     @Field(key: "industry")
     var industry: String
-    /// Types: 0 is individual & 1-3 is entity
-    /// - 0 - Indivudial
-    /// - 1 - Company
-    /// - 2 - Community Organizations
-    /// - 3 - School
+    /// Types: 0-2 is individual & 3-5 is entity
+    /// - 0 - Student
+    /// - 1 - teacher
+    /// - 2 - Working professional
+    /// - 3 - Company
+    /// - 4 - Community Organizations
+    /// - 5 - School
     @Field(key: "type")
     var type: Int
     @Field(key: "messages")
