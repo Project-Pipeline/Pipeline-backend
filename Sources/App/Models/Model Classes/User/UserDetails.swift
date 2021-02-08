@@ -46,7 +46,7 @@ struct DescriptionDetailPair: Content {
     let detail: String
 }
 
-struct Address {
+struct Address: Content {
     let components: [String]
     let latitude: Double
     let longitude: Double
