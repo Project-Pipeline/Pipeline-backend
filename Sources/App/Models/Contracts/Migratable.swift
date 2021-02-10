@@ -22,15 +22,22 @@ struct FieldForMigratable {
     let name: FieldKey
     let type: DatabaseSchema.DataType
     let required: Bool
+    let additionalConstraint: DatabaseSchema.FieldConstraint?
     
     /// - Parameters:
     ///   - name: name of the field in the database, usually a string
     ///   - type: type of the field
     ///   - required: false if the field is optional, otherwise true
-    init(_ name: FieldKey, _ type: DatabaseSchema.DataType, _ required: Bool = true) {
+    init(
+        _ name: FieldKey,
+        _ type: DatabaseSchema.DataType,
+        _ required: Bool = true,
+        _ additionalConstraint: DatabaseSchema.FieldConstraint? = nil)
+    {
         self.name = name
         self.type = type
         self.required = required
+        self.additionalConstraint = additionalConstraint
     }
 }
 
@@ -50,9 +57,15 @@ struct MigratedObject: Migration {
         }
         
         migratable.fields.forEach { field in
-            schema = field.required
-                ? schema.field(field.name, field.type, .required)
-                : schema.field(field.name, field.type)
+            if let additionalConstraint = field.additionalConstraint {
+                schema = field.required
+                    ? schema.field(field.name, field.type, .required, additionalConstraint)
+                    : schema.field(field.name, field.type, additionalConstraint)
+            } else {
+                schema = field.required
+                    ? schema.field(field.name, field.type, .required)
+                    : schema.field(field.name, field.type)
+            }
         }
         
         return schema.create()

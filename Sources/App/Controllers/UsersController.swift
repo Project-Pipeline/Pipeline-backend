@@ -62,5 +62,24 @@ struct UsersController: RouteCollection {
                     }
                 }
         }
+        
+        // MARK: - User Details
+        let userDetailsGrouped = routes.grouped("api", "user", "details")
+        
+        userDetailsGrouped.get() { req -> EventLoopFuture<[UserDetails]> in
+            try req
+                .authorizeAndGetUser()
+                .flatMap { $0.$userDetails.get(on: req.db) }
+        }
+        
+        userDetailsGrouped.post() { req -> EventLoopFuture<ServerResponse> in
+            let userDetails = try req.content.decode(UserDetails.self)
+            return try req
+                .authorize()
+                .flatMap { _ in
+                    userDetails.save(on: req.db)
+                }
+                .transform(to: ServerResponse.defaultSuccess)
+        }
     }
 }

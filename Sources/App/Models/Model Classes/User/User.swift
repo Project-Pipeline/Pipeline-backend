@@ -37,8 +37,19 @@ final class User: Codable, Content, Model {
     var industryType: String
     @Field(key: "industry")
     var industry: String
+    /// Types: 0-2 is individual & 3-5 is entity
+    /// - 0 - Student
+    /// - 1 - teacher
+    /// - 2 - Working professional
+    /// - 3 - Company
+    /// - 4 - Community Organizations
+    /// - 5 - School
+    @Field(key: "type")
+    var type: Int
     @Field(key: "messages")
     var messages: [UUID]
+    @Children(for: \.$user)
+    var userDetails: [UserDetails]
 }
 
 // MARK: - Migration
@@ -62,7 +73,8 @@ extension User: Migratable {
             .init("entityName", .string),
             .init("industryType", .string),
             .init("industry", .string),
-            .init("messages", .array(of: .uuid))
+            .init("messages", .array(of: .uuid)),
+            .init("type", .int)
         ]
     }
 }
