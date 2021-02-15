@@ -81,5 +81,15 @@ struct UsersController: RouteCollection {
                 }
                 .transform(to: ServerResponse.defaultSuccess)
         }
+        
+        // MARK: - Opportunities
+        let opportunities = routes.grouped("api", "user", "opportunities")
+        
+        // Post method is in Opportunites Controller
+        opportunities.get() { req -> EventLoopFuture<[Opportunity]> in
+            try req
+                .authorizeAndGetUser()
+                .flatMap { $0.$opportunities.get(on: req.db) }
+        }
     }
 }

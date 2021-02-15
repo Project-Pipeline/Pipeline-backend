@@ -21,7 +21,13 @@ public func configure(_ app: Application) throws {
     let migratables: [Migratable.Type] = [
         User.self,
         Conversation.self,
-        UserDetails.self
+        UserDetails.self,
+        // MARK: - Opportunity
+        Opportunity.self,
+        OpportunityCategory.self,
+        Zipcode.self,
+        ZipcodePivot.self
+        
     ]
     
     migratables.forEach { migratable in
