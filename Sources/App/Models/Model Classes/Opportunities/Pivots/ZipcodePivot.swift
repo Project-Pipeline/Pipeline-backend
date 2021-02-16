@@ -35,11 +35,7 @@ extension ZipcodePivot: Migratable {
     static var schema: String {
         "zipcode-pivot"
     }
-    
-    static var idRequired: Bool {
-        true
-    }
-    
+
     static var fields: [FieldForMigratable] {
         [
             .init("opportunityId", .uuid, true, .references("Opportunity", "id", onDelete: .cascade)),

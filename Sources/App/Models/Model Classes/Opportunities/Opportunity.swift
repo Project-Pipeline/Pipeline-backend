@@ -28,11 +28,18 @@ final class Opportunity: Model, Content {
     var isFullTime: Bool
     @Field(key: "address")
     var address: Address
+    @Field(key: "category")
+    var category: String
     @Siblings(
         through: ZipcodePivot.self,
         from: \.$opportunity,
         to: \.$zipcode)
     var zipCodes: [Zipcode]
+    @Siblings(
+        through: OpportunityCategoryPivot.self,
+        from: \.$opportunity,
+        to: \.$category)
+    var categories: [OpportunityCategory]
     @Parent(key: "userID")
     var user: User
 }
@@ -40,10 +47,6 @@ final class Opportunity: Model, Content {
 extension Opportunity: Migratable {
     static var schema: String {
         "Opportunity"
-    }
-    
-    static var idRequired: Bool {
-        true
     }
     
     static var fields: [FieldForMigratable] {
@@ -57,7 +60,8 @@ extension Opportunity: Migratable {
             .init("responsibilities", .array(of: .string)),
             .init("compensation", .string),
             .init("is-full-time", .bool),
-            .init("address", .dictionary)
+            .init("address", .dictionary),
+            .init("category", .string)
         ]
     }
 }
@@ -65,6 +69,7 @@ extension Opportunity: Migratable {
 final class OpportunitiesContentsWrapper: Content {
     let opportunity: Opportunity
     let zipcode: Zipcode
+    let category: OpportunityCategory
 }
 
 extension Opportunity: Hashable {

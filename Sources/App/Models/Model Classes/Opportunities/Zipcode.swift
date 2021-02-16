@@ -25,7 +25,5 @@ extension Zipcode: Migratable {
         "Zipcode"
     }
     
-    static var idRequired: Bool { true }
-    
     static var fields: [FieldForMigratable] { [] }
 }

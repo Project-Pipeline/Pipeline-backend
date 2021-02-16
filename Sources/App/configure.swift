@@ -10,7 +10,7 @@ public func configure(_ app: Application) throws {
     app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
     app.middleware.use(app.sessions.middleware)
     
-    let environmentConfig: EnvironmentConfigType = appContainer.resolve(EnvironmentConfigType.self)
+    let environmentConfig: EnvironmentConfigType = appContainer.resolve()
     environmentConfig.configureMiddlewareFrom(app: app)
     
     // Configure MongoDB
@@ -25,9 +25,9 @@ public func configure(_ app: Application) throws {
         // MARK: - Opportunity
         Opportunity.self,
         OpportunityCategory.self,
+        OpportunityCategoryPivot.self,
         Zipcode.self,
         ZipcodePivot.self
-        
     ]
     
     migratables.forEach { migratable in

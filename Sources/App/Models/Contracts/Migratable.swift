@@ -80,4 +80,6 @@ extension Migratable {
     static func createMigration() -> Migration {
         MigratedObject(migratable: self)
     }
+    
+    static var idRequired: Bool { true }
 }

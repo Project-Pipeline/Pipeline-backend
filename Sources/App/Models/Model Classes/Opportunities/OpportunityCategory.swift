@@ -10,19 +10,23 @@ import Vapor
 import Fluent
 
 final class OpportunityCategory: Content, Model {
-    @ID
-    var id: UUID?
+    /// - How the id is derived from `name`:
+    ///   - Take the raw name e.g. "Agriculture, Food and Natural Resources",
+    ///   - then remove all commas and spaces
+    @ID(custom: "id")
+    var id: String?
     @Field(key: "name")
     var name: String
+    @Siblings(
+        through: OpportunityCategoryPivot.self,
+        from: \.$category,
+        to: \.$opportunity)
+    var opportunities: [Opportunity]
 }
 
 extension OpportunityCategory: Migratable {
     static var schema: String {
         "OpportunityCategory"
-    }
-    
-    static var idRequired: Bool {
-        true
     }
     
     static var fields: [FieldForMigratable] {
