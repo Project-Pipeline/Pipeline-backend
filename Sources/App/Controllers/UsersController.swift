@@ -86,10 +86,10 @@ struct UsersController: RouteCollection {
         let opportunities = routes.grouped("api", "user", "opportunities")
         
         // Post method is in Opportunites Controller
-        opportunities.get() { req -> EventLoopFuture<[Opportunity]> in
+        opportunities.get() { req -> EventLoopFuture<Page<Opportunity>> in
             try req
                 .authorizeAndGetUser()
-                .flatMap { $0.$opportunities.get(on: req.db) }
+                .flatMap { $0.$opportunities.query(on: req.db).paginate(for: req) }
         }
     }
 }

@@ -30,6 +30,14 @@ final class Opportunity: Model, Content {
     var address: Address
     @Field(key: "category")
     var category: String
+    /// Unix timestamp
+    @Field(key: "created")
+    var created: Int
+    /// Unix timestamp
+    @Field(key: "due")
+    var due: Int
+    @Field(key: "state")
+    var state: Int
     @Siblings(
         through: ZipcodePivot.self,
         from: \.$opportunity,
@@ -61,7 +69,10 @@ extension Opportunity: Migratable {
             .init("compensation", .string),
             .init("is-full-time", .bool),
             .init("address", .dictionary),
-            .init("category", .string)
+            .init("category", .string),
+            .init("created", .int),
+            .init("due", .int),
+            .init("state", .int)
         ]
     }
 }

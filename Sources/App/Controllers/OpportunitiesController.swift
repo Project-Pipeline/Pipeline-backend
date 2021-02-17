@@ -18,6 +18,8 @@ struct OpportunitiesController: RouteCollection {
         opportunities.delete(use: removeOpportunity)
         // api/opportunities/categories
         opportunities.get("categories", use: getCategories)
+        // api/opportunities/all
+        opportunities.get("all", use: getAllOpportunities)
     }
     
     // MARK: - Create
@@ -49,40 +51,40 @@ struct OpportunitiesController: RouteCollection {
     ///   - a comma separated list of zip codes e.g. `zipcode=11357,11373`:  returns opportunites contained in those zip codes
     ///   - a comma separated list of categories e.g. `category=category1,category2`:  returns opportunites matching these categories
     func getOpportunities(req: Request) throws -> EventLoopFuture<[Opportunity]> {
-        let zipcodes = (try? req.queryParam(named: "zipcode", type: String.self))?
-            .components(separatedBy: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        let categories = (try? req.queryParam(named: "category", type: String.self))?
-            .components(separatedBy: ",")
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        // if both criterias exist, return the intersections between the two
-        if let zipcodes = zipcodes, let categories = categories {
-            return zip2(
-                getOpportunites(locatedIn: zipcodes, req: req),
-                getOpportunites(matching: categories, req: req)
-            )
-                .map { zipcodeOps, categoriesOps in
-                    let set1 = Set(zipcodeOps)
-                    let set2 = Set(categoriesOps)
-                    return Array(set1.intersection(set2))
-                }
+        return try req.authorize().flatMap { _ in
+            let zipcodes = (try? req.queryParam(named: "zipcode", type: String.self))?
+                .components(separatedBy: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            let categories = (try? req.queryParam(named: "category", type: String.self))?
+                .components(separatedBy: ",")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            // if both criterias exist, return the intersections between the two
+            if let zipcodes = zipcodes, let categories = categories {
+                return zip2(
+                    OpportunitiesController.getOpportunites(locatedIn: zipcodes, req: req),
+                    OpportunitiesController.getOpportunites(matching: categories, req: req)
+                )
+                    .map { zipcodeOps, categoriesOps in
+                        let set1 = Set(zipcodeOps)
+                        let set2 = Set(categoriesOps)
+                        return Array(set1.intersection(set2))
+                    }
+            }
+            // query by zip codes
+            if let zipcodes = zipcodes {
+                return OpportunitiesController.getOpportunites(locatedIn: zipcodes, req: req)
+            }
+            // query by categories
+            if let categories = categories {
+                return OpportunitiesController.getOpportunites(matching: categories, req: req)
+            }
+            // return all
+            return req.eventLoop.future([])
         }
-        // query by zip codes
-        if let zipcodes = zipcodes {
-            return getOpportunites(locatedIn: zipcodes, req: req)
-        }
-        // query by categories
-        if let categories = categories {
-            return getOpportunites(matching: categories, req: req)
-        }
-        // return all
-        return Opportunity
-            .query(on: req.db)
-            .all()
     }
     
     /// Get Opportunities located in the given zip codes
-    private func getOpportunites(
+    private static func getOpportunites(
         locatedIn zipcodes: [String],
         req: Request
     ) -> EventLoopFuture<[Opportunity]> {
@@ -102,7 +104,7 @@ struct OpportunitiesController: RouteCollection {
     }
     
     /// Get Opportunities matching the given categories
-    private func getOpportunites(
+    private static func getOpportunites(
         matching categories: [String],
         req: Request
     ) -> EventLoopFuture<[Opportunity]> {
@@ -119,6 +121,10 @@ struct OpportunitiesController: RouteCollection {
         return req.eventLoop
             .flatten(futures)
             .map { $0.reduce([], +) }
+    }
+    
+    func getAllOpportunities(req: Request) -> EventLoopFuture<Page<Opportunity>> {
+        Opportunity.query(on: req.db).paginate(for: req)
     }
     
     
