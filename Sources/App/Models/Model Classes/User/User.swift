@@ -50,6 +50,8 @@ final class User: Codable, Content, Model {
     var messages: [UUID]
     @Children(for: \.$user)
     var userDetails: [UserDetails]
+    @Children(for: \.$user)
+    var opportunities: [Opportunity]
 }
 
 // MARK: - Migration
