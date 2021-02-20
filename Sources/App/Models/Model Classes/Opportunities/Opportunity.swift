@@ -38,6 +38,8 @@ final class Opportunity: Model, Content {
     var due: Int
     @Field(key: "state")
     var state: Int
+    @Field(key: "grades-wanted")
+    var gradesWanted: [Int]
     @Siblings(
         through: ZipcodePivot.self,
         from: \.$opportunity,
@@ -72,7 +74,8 @@ extension Opportunity: Migratable {
             .init("category", .string),
             .init("created", .int),
             .init("due", .int),
-            .init("state", .int)
+            .init("state", .int),
+            .init("grades-wanted", .array(of: .int))
         ]
     }
 }
