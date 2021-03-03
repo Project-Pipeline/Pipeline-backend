@@ -2,7 +2,7 @@
 
 # Pipeline Backend
 
-The backend code for Project Pipeline
+The backend code for Project Pipeline, coded with [Vapor](https://vapor.codes) 4.
 
 ## Notes
 * For the app to work you must add a  `config.json`  (ignored by git) containing the following contents to the project's directory.

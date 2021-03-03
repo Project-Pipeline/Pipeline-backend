@@ -91,5 +91,15 @@ struct UsersController: RouteCollection {
                 .authorizeAndGetUser()
                 .flatMap { $0.$opportunities.query(on: req.db).paginate(for: req) }
         }
+        
+        // MARK: - Posts
+        let posts = routes.grouped("api", "user", "posts")
+        
+        posts.get() { req -> EventLoopFuture<Page<Post>> in
+            let userID = try req.queryParam(named: "id", type: UUID.self)
+            return User.find(userID, on: req.db)
+                .unwrap(or: "No posts found for this user")
+                .flatMap { $0.$posts.query(on: req.db).paginate(for: req) }
+        }
     }
 }
