@@ -35,7 +35,25 @@ struct UsersController: RouteCollection {
         // MARK: - Authorization-required endpoints
         
         routes.get("api", "user", "info") { req -> EventLoopFuture<User> in
+            if let id = try? req.queryParam(named: "id", type: UUID.self) {
+                return try req.authorize().flatMap { _ in
+                   return User.find(id, on: req.db)
+                        .unwrap(or: "No user found")
+                }
+            }
             return try req.authorizeAndGetUser()
+        }
+        
+        routes.get("api", "user", "info", "multiple") { req -> EventLoopFuture<[User]> in
+            let uuids = try (try req.content.decode(StringArray.self)).values.map { str -> UUID in
+                guard let uuid = UUID(uuidString: str) else {
+                    throw Abort(.badRequest)
+                }
+                return uuid
+            }
+            return req.eventLoop.flatten(uuids.map {
+                User.find($0, on: req.db).unwrap(or: "No user found")
+            })
         }
         
         routes.get("api", "user", "search") { req -> EventLoopFuture<[User]> in
