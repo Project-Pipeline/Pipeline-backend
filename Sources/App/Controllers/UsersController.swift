@@ -51,7 +51,7 @@ struct UsersController: RouteCollection {
                 }
                 return uuid
             }
-            return req.authorize().flatMap { _ in
+            return try req.authorize().flatMap { _ in
                 req.eventLoop.flatten(uuids.map {
                     User.find($0, on: req.db).unwrap(or: "No user found")
                 })
