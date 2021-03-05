@@ -58,3 +58,8 @@ struct TitledLink: Content {
     let title: String
     let link: URL
 }
+
+struct PostAndCategoryWrapper: Content {
+    let post: Post
+    let category: CategoryForPost
+}

@@ -51,9 +51,11 @@ struct UsersController: RouteCollection {
                 }
                 return uuid
             }
-            return req.eventLoop.flatten(uuids.map {
-                User.find($0, on: req.db).unwrap(or: "No user found")
-            })
+            return req.authorize().flatMap { _ in
+                req.eventLoop.flatten(uuids.map {
+                    User.find($0, on: req.db).unwrap(or: "No user found")
+                })
+            }
         }
         
         routes.get("api", "user", "search") { req -> EventLoopFuture<[User]> in

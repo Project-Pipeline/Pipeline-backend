@@ -16,10 +16,10 @@ struct PostsController: RouteCollection {
         postsGrouped.post(use: createPost)
         postsGrouped.delete(use: deletePost)
         postsGrouped.get(use: getPosts)
-        postsGrouped.get("all", use: getAllPosts)
         
         // api/posts/category
-        postsGrouped.post("category", use: createCategoryForPost)
+        let categoryGrouped = postsGrouped.grouped("category")
+        categoryGrouped.get(use: getAllCategories)
         
         // api/posts/comment
         let commentsGrouped = postsGrouped.grouped("comment")
@@ -38,33 +38,22 @@ struct PostsController: RouteCollection {
     
     // MARK: - Create
     
-    func createCategoryForPost(req: Request) throws -> EventLoopFuture<CategoryForPost> {
-        let category = try req.content.decode(CategoryForPost.self)
-        return try req.authorize().flatMap { _ in
-            category
-                .saveIfNew(on: req)
-                .map { _ in category }
-        }
-    }
-    
     func createPost(req: Request) throws -> EventLoopFuture<HTTPStatus> {
-        let post = try req.content.decode(Post.self)
-        return try req.authorize().flatMap { _ in
-            post.save(on: req.db).transform(to: .created)
-        }
+        let postAndCategory = try req.content.decode(PostAndCategoryWrapper.self)
+        return try req
+            .authorize()
+            .flatMap { _ in
+                postAndCategory.category.saveIfNew(on: req)
+            }
+            .flatMap { _ in
+                postAndCategory.post.save(on: req.db).transform(to: .created)
+            }
     }
     
     // MARK: - Get
-    /// Gets all posts
-    func getAllPosts(req: Request) throws -> EventLoopFuture<Page<Post>> {
-        try req.authorize().flatMap { _ in
-            Post.query(on: req.db).paginate(for: req)
-        }
-    }
-    
     /// Gets posts
     /// - query parameters:
-    ///   - no query params: empty array (see the method `getAllPosts()`)
+    ///   - no query params: All posts, paginated
     ///   - a comma separated list of categories e.g. `category=school,student`:  returns posts belonging to these categories
     func getPosts(req: Request) throws -> EventLoopFuture<Page<Post>> {
         let categories = try? req.commaSeparatedQueryParam(named: "category")
@@ -84,7 +73,13 @@ struct PostsController: RouteCollection {
                     .flatten(futures)
                     .map { $0.reduce(.empty, +)}
             }
-            return req.eventLoop.future(.empty)
+            return Post.query(on: req.db).paginate(for: req)
+        }
+    }
+    
+    func getAllCategories(req: Request) throws -> EventLoopFuture<[CategoryForPost]> {
+        try req.authorize().flatMap { _ in
+            CategoryForPost.query(on: req.db).all()
         }
     }
     
