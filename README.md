@@ -13,7 +13,8 @@ The backend code for Project Pipeline, coded with [Vapor](https://vapor.codes) 4
         "googleCallbackURL": "your callback url",
         "mongoURL": "your mongo url in base64 encoded form",
         "cloudinaryAPISecret": "cloudinary API secret",
-        "unrestrictedCORS": "true/false"
+        "unrestrictedCORS": "true/false",
+        "websiteUrl": "url of the website" // would be http://localhost:4200 on dev mode
     }
 ```
 * Run `source setup.sh` to setup the essential environmental variables for this project.

@@ -13,6 +13,7 @@ import Fluent
 struct AuthenticationController: RouteCollection {
     func boot(routes: RoutesBuilder) throws {
         // MARK: - OAuth: First Step
+        let config: EnvironmentConfigType = appContainer.resolve()
         
         guard let googleCallbackURL = Environment.get("GOOGLE_CALLBACK_URL") else {
             fatalError("Google callback URL not set")
@@ -64,7 +65,7 @@ struct AuthenticationController: RouteCollection {
                     return (userInfo, idToken.idToken)
                 }
                 .flatMap { result in
-                    return req.eventLoop.future(req.redirect(to: "http://localhost:4200/logindetails\(result.0)&idToken=\(result.1)"))
+                    return req.eventLoop.future(req.redirect(to: "\(config.websiteUrl)/logindetails\(result.0)&idToken=\(result.1)"))
                 }
         }
     }

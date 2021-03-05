@@ -16,6 +16,7 @@ struct MockEnvironmentConfig: EnvironmentConfigType {
     var mongoURL: String = ""
     var cloudinaryAPISecret: String = "abcd"
     var unrestrictedCORS: Bool = false
+    var websiteUrl = "http://locahost:4200"
     
     init() {}
     

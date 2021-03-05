@@ -45,16 +45,26 @@ struct UsersController: RouteCollection {
         }
         
         routes.get("api", "user", "info", "multiple") { req -> EventLoopFuture<[User]> in
-            let uuids = try (try req.content.decode(StringArray.self)).values.map { str -> UUID in
+            let uuids = try req.commaSeparatedQueryParam(named: "ids").map { str -> UUID in
                 guard let uuid = UUID(uuidString: str) else {
                     throw Abort(.badRequest)
                 }
                 return uuid
             }
+            // convert to a set therefore reducing duplicate calls
+            let set = Array(Set(uuids))
             return try req.authorize().flatMap { _ in
-                req.eventLoop.flatten(uuids.map {
+                req.eventLoop.flatten(set.map {
                     User.find($0, on: req.db).unwrap(or: "No user found")
                 })
+                .map { (usersInSet: [User]) -> [User] in
+                    uuids.compactMap { uuid in
+                        if let user = usersInSet.first(where: { $0.id == uuid }) {
+                            return user
+                        }
+                        return nil
+                    }
+                }
             }
         }
         
