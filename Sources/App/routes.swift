@@ -8,11 +8,12 @@ public func routes(_ app: Application) throws {
     try app.register(collection: ImageUploadController())
     try app.register(collection: MessagingController())
     try app.register(collection: OpportunitiesController())
+    try app.register(collection: PostsController())
     
     // MARK: - Misc
     
     let messagingSystem = MessagingSystem(app: app)
-    app.webSocket("api", "messaging") { req, ws in
+    app.webSocket("ws", "messaging") { req, ws in
         guard let token = try? req.queryParam(named: "token", type: String.self) else { return }
         try? req
             .authorize(with: token)

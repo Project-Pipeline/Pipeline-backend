@@ -18,19 +18,7 @@ public func configure(_ app: Application) throws {
     try app.databases.use(.mongo(connectionString: environmentConfig.mongoURL), as: .mongo)
     
     // Configure migrations
-    let migratables: [Migratable.Type] = [
-        User.self,
-        Conversation.self,
-        UserDetails.self,
-        // MARK: - Opportunity
-        Opportunity.self,
-        OpportunityCategory.self,
-        OpportunityCategoryPivot.self,
-        Zipcode.self,
-        ZipcodePivot.self
-    ]
-    
-    migratables.forEach { migratable in
+    migrations.forEach { migratable in
         app.migrations.add(migratable.createMigration())
     }
     

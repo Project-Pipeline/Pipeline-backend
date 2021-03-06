@@ -2,7 +2,7 @@
 
 # Pipeline Backend
 
-The backend code for Project Pipeline
+The backend code for Project Pipeline, coded with [Vapor](https://vapor.codes) 4.
 
 ## Notes
 * For the app to work you must add a  `config.json`  (ignored by git) containing the following contents to the project's directory.
@@ -13,7 +13,8 @@ The backend code for Project Pipeline
         "googleCallbackURL": "your callback url",
         "mongoURL": "your mongo url in base64 encoded form",
         "cloudinaryAPISecret": "cloudinary API secret",
-        "unrestrictedCORS": "true/false"
+        "unrestrictedCORS": "true/false",
+        "websiteUrl": "url of the website" // would be http://localhost:4200 on dev mode
     }
 ```
 * Run `source setup.sh` to setup the essential environmental variables for this project.

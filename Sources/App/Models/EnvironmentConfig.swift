@@ -14,6 +14,7 @@ public protocol EnvironmentConfigType {
     var googleCallbackURL: String { get }
     var mongoURL: String { get }
     var cloudinaryAPISecret: String { get }
+    var websiteUrl: String { get }
     // feature flags
     var unrestrictedCORS: Bool { get }
     
@@ -27,6 +28,7 @@ class EnvironmentConfig: Codable, EnvironmentConfigType {
     let googleCallbackURL: String
     let mongoURL: String
     let cloudinaryAPISecret: String
+    let websiteUrl: String
     
     // feature flags
     let unrestrictedCORS: Bool
@@ -39,6 +41,7 @@ class EnvironmentConfig: Codable, EnvironmentConfigType {
         self.mongoURL = try container.decode(String.self, forKey: .mongoURL).base64Decoded()
         self.unrestrictedCORS = try container.decode(Bool.self, forKey: .unrestrictedCORS)
         self.cloudinaryAPISecret = try container.decode(String.self, forKey: .cloudinaryAPISecret).base64Decoded()
+        self.websiteUrl = try container.decode(String.self, forKey: .websiteUrl)
     }
     
     static func load() -> EnvironmentConfigType {

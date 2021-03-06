@@ -47,17 +47,13 @@ struct OpportunitiesController: RouteCollection {
     // MARK: - Get
     /// Gets opportunites
     /// - query parameters:
-    ///   - no query params: all the opportunities
+    ///   - no query params: empty array (see the method `getAllOpportunities()`)
     ///   - a comma separated list of zip codes e.g. `zipcode=11357,11373`:  returns opportunites contained in those zip codes
     ///   - a comma separated list of categories e.g. `category=category1,category2`:  returns opportunites matching these categories
     func getOpportunities(req: Request) throws -> EventLoopFuture<[Opportunity]> {
         return try req.authorize().flatMap { _ in
-            let zipcodes = (try? req.queryParam(named: "zipcode", type: String.self))?
-                .components(separatedBy: ",")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            let categories = (try? req.queryParam(named: "category", type: String.self))?
-                .components(separatedBy: ",")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            let zipcodes = try? req.commaSeparatedQueryParam(named: "zipcode")
+            let categories = try? req.commaSeparatedQueryParam(named: "category")
             // if both criterias exist, return the intersections between the two
             if let zipcodes = zipcodes, let categories = categories {
                 return zip2(

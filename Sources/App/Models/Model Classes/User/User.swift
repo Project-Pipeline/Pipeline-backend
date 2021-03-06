@@ -52,6 +52,8 @@ final class User: Codable, Content, Model {
     var userDetails: [UserDetails]
     @Children(for: \.$user)
     var opportunities: [Opportunity]
+    @Children(for: \.$user)
+    var posts: [Post]
 }
 
 // MARK: - Migration
@@ -59,10 +61,6 @@ final class User: Codable, Content, Model {
 extension User: Migratable {
     static var schema: String {
         "User"
-    }
-    
-    static var idRequired: Bool {
-        true
     }
     
     static var fields: [FieldForMigratable] {

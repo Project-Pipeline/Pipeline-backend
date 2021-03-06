@@ -35,7 +35,37 @@ struct UsersController: RouteCollection {
         // MARK: - Authorization-required endpoints
         
         routes.get("api", "user", "info") { req -> EventLoopFuture<User> in
+            if let id = try? req.queryParam(named: "id", type: UUID.self) {
+                return try req.authorize().flatMap { _ in
+                   return User.find(id, on: req.db)
+                        .unwrap(or: "No user found")
+                }
+            }
             return try req.authorizeAndGetUser()
+        }
+        
+        routes.get("api", "user", "info", "multiple") { req -> EventLoopFuture<[User]> in
+            let uuids = try req.commaSeparatedQueryParam(named: "ids").map { str -> UUID in
+                guard let uuid = UUID(uuidString: str) else {
+                    throw Abort(.badRequest)
+                }
+                return uuid
+            }
+            // convert to a set therefore reducing duplicate calls
+            let set = Array(Set(uuids))
+            return try req.authorize().flatMap { _ in
+                req.eventLoop.flatten(set.map {
+                    User.find($0, on: req.db).unwrap(or: "No user found")
+                })
+                .map { (usersInSet: [User]) -> [User] in
+                    uuids.compactMap { uuid in
+                        if let user = usersInSet.first(where: { $0.id == uuid }) {
+                            return user
+                        }
+                        return nil
+                    }
+                }
+            }
         }
         
         routes.get("api", "user", "search") { req -> EventLoopFuture<[User]> in
@@ -90,6 +120,16 @@ struct UsersController: RouteCollection {
             try req
                 .authorizeAndGetUser()
                 .flatMap { $0.$opportunities.query(on: req.db).paginate(for: req) }
+        }
+        
+        // MARK: - Posts
+        let posts = routes.grouped("api", "user", "posts")
+        
+        posts.get() { req -> EventLoopFuture<Page<Post>> in
+            let userID = try req.queryParam(named: "id", type: UUID.self)
+            return User.find(userID, on: req.db)
+                .unwrap(or: "No posts found for this user")
+                .flatMap { $0.$posts.query(on: req.db).paginate(for: req) }
         }
     }
 }

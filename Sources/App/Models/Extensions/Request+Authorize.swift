@@ -13,6 +13,7 @@ import Fluent
 extension Request {
     /// Ensures the user has the permission to access the site.
     /// - Returns: Returns the user's email asynchronously by making a call to google's tokenInfo endpoint
+    /// - If the request is not authorized, it will return a 401 unauthorized status code
     func authorize() throws -> EventLoopFuture<String> {
         guard let idToken = headers.bearerAuthorization?.token else {
             throw Abort(.unauthorized)

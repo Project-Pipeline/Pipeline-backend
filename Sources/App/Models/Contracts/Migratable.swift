@@ -12,6 +12,7 @@ import Fluent
 /// Automatically create a migration when a model conforms to this protocol
 protocol Migratable  {
     static var idRequired: Bool { get }
+    /// Name of the collection in the database
     static var schema: String { get }
     static var fields: [FieldForMigratable] { get }
     
