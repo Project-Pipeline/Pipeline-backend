@@ -13,7 +13,7 @@ public func routes(_ app: Application) throws {
     // MARK: - Misc
     
     let messagingSystem = MessagingSystem(app: app)
-    app.webSocket("api", "messaging") { req, ws in
+    app.webSocket("ws", "messaging") { req, ws in
         guard let token = try? req.queryParam(named: "token", type: String.self) else { return }
         try? req
             .authorize(with: token)
