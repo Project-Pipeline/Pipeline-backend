@@ -20,7 +20,7 @@ final class Post: Model, Content {
     var title: String?
     @Field(key: "body")
     var body: String
-    @Timestamp(key: "modified", on: .create, format: .iso8601)
+    @Timestamp(key: "modified", on: .update, format: .iso8601)
     var modified: Date?
     @Timestamp(key: "created", on: .create, format: .iso8601)
     var created: Date?

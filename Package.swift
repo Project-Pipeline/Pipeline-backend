@@ -14,7 +14,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/jwt.git", from: "4.0.0"),
         
         // oauth
-        .package(url: "https://github.com/vapor-community/Imperial.git", from: "1.0.0-beta.2"),
+        .package(url: "https://github.com/vapor-community/Imperial.git", from: "1.0.1"),
         
         // Dependency Injection
         .package(url: "https://github.com/Swinject/Swinject.git", from: "2.7.1")

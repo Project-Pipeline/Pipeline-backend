@@ -22,4 +22,6 @@ let migrations: [Migratable.Type] = [
     CommentForPost.self,
     LikeForPost.self,
     CategoryForPost.self,
+    // MARK: - Resume
+    Resume.self
 ]
