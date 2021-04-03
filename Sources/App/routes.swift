@@ -9,6 +9,7 @@ public func routes(_ app: Application) throws {
     try app.register(collection: MessagingController())
     try app.register(collection: OpportunitiesController())
     try app.register(collection: PostsController())
+    try app.register(collection: ResumeController())
     
     // MARK: - Misc
     

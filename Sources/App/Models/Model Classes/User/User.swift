@@ -54,6 +54,8 @@ final class User: Codable, Content, Model {
     var opportunities: [Opportunity]
     @Children(for: \.$user)
     var posts: [Post]
+    @Children(for: \.$user)
+    var resumes: [Resume]
 }
 
 // MARK: - Migration

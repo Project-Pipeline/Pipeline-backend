@@ -10,6 +10,8 @@ import Fluent
 import Vapor
 
 final class Resume: Model, Content {
+    @Parent(key: "userID")
+    var user: User
     @ID
     var id: UUID?
     @Field(key: "education")
@@ -36,6 +38,7 @@ final class Resume: Model, Content {
     var modified: Date?
     @Timestamp(key: "created", on: .create, format: .iso8601)
     var created: Date?
+    /// If false, this resume in currently a draft
     @Field(key: "published")
     var published: Bool
 }
@@ -123,6 +126,7 @@ extension Resume: Migratable {
     
     static var fields: [FieldForMigratable] {
         [
+            .init("userID", .uuid, true, .references("User", "id")),
             .init("education", .array(of: .dictionary)),
             .init("activities", .array(of: .dictionary)),
             .init("apClasses", .array(of: .string)),

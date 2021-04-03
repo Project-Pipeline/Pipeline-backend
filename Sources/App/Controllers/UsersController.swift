@@ -131,5 +131,31 @@ struct UsersController: RouteCollection {
                 .unwrap(or: "No posts found for this user")
                 .flatMap { $0.$posts.query(on: req.db).paginate(for: req) }
         }
+
+        let resumes = routes.grouped("api", "user", "resumes")
+        resumes.get(use: getPublicResumes)
+        let allResumes = resumes.grouped("all")
+        allResumes.get(use: getAllResumes)
+        
     }
+    
+    // MARK: - Resume Builder
+    
+    /// Public version of the resume api, will only return published resumes
+    func getPublicResumes(req: Request) throws -> EventLoopFuture<[Resume]> {
+        let userID = try req.queryParam(named: "userId", type: UUID.self)
+        return User.find(userID, on: req.db)
+            .unwrap(or: "No resume found for this user")
+            .flatMap { $0.$resumes.get(on: req.db) }
+            .map { resumes in
+                resumes.filter { $0.published }
+            }
+    }
+    
+    /// Get the signed in user's resumes which includes resumes in draft status
+    func getAllResumes(req: Request) throws -> EventLoopFuture<[Resume]> {
+        return try req.authorizeAndGetUser()
+            .flatMap { $0.$resumes.get(on: req.db) }
+    }
+    
 }
