@@ -22,6 +22,9 @@ struct ResumeController: RouteCollection {
         
         let resumeUpdate = routes.grouped("api", "resume", "update")
         resumeUpdate.post { try self.resumeAction(req: $0, operation: .update) }
+        
+        let updateResumeAsActive = routes.grouped("api", "resume", "active")
+        updateResumeAsActive.get(use: markAsActive)
     }
     
     func resumeAction(req: Request, operation: Operation) throws -> EventLoopFuture<HTTPStatus> {
@@ -60,5 +63,22 @@ struct ResumeController: RouteCollection {
                     }
                     .transform(to: .noContent)
             }
+    }
+    
+    func markAsActive(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let resumeId = try req.queryParam(named: "id", type: UUID.self)
+        return try req
+            .authorizeAndGetUser()
+            .flatMap { user -> EventLoopFuture<[Resume]> in
+                user.$resumes.get(on: req.db)
+            }
+            .flatMap { resumes -> EventLoopFuture<[Void]> in
+                let futures = resumes.map { resume -> EventLoopFuture<Void> in
+                    resume.isActive = resume.id == resumeId
+                    return resume.update(on: req.db)
+                }
+                return req.eventLoop.flatten(futures)
+            }
+            .transform(to: .noContent)
     }
 }

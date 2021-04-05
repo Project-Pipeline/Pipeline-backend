@@ -144,12 +144,14 @@ struct UsersController: RouteCollection {
     /// Public version of the resume api, will only return published resumes
     func getPublicResumes(req: Request) throws -> EventLoopFuture<[Resume]> {
         let userID = try req.queryParam(named: "userId", type: UUID.self)
-        return User.find(userID, on: req.db)
-            .unwrap(or: "No resume found for this user")
-            .flatMap { $0.$resumes.get(on: req.db) }
-            .map { resumes in
-                resumes.filter { $0.published }
-            }
+        return req.authorize().flatMap { _ in
+            User.find(userID, on: req.db)
+                .unwrap(or: "No resume found for this user")
+                .flatMap { $0.$resumes.get(on: req.db) }
+                .map { resumes in
+                    resumes.filter { $0.published }
+                }
+        }
     }
     
     /// Get the signed in user's resumes which includes resumes in draft status

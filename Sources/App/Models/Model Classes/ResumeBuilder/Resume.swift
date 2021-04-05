@@ -25,7 +25,7 @@ final class Resume: Model, Content {
     @Field(key: "volunteering")
     var volunteering: [ResumeResource.Volunteering]
     @Field(key: "experiences")
-    var experiences: [ResumeResource.Experience]
+    var expertciences: [ResumeResource.Experience]
     @Field(key: "certs")
     var certs: [ResumeResource.Certification]
     @Field(key: "awards")
@@ -41,6 +41,14 @@ final class Resume: Model, Content {
     /// If false, this resume in currently a draft
     @Field(key: "published")
     var published: Bool
+    /// User can create multiple resumes and mark one as active to show
+    /// on the profile page. Only one resume can be active at the same time.
+    @Field(key: "isActive")
+    var isActive: Bool
+    /// Each resume can have a tag to tailor the resume toward a specific field
+    @Field(key: "tag")
+    var tag: String?
+    
 }
 
 enum ResumeResource {
@@ -99,7 +107,7 @@ enum ResumeResource {
         let current: Bool
     }
     
-    struct Certification: Content {
+    struct Certicdpfication: Content {
         let name: String
         let issued: String
         let issuer: String
@@ -139,7 +147,9 @@ extension Resume: Migratable {
             .init("testScores", .array(of: .dictionary)),
             .init("modified", .string),
             .init("created", .string),
-            .init("published", .bool)
+            .init("published", .bool),
+            .init("isActive", .bool),
+            .init("tag", .string)
         ]
     }
 }
