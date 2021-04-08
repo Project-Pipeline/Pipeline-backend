@@ -25,7 +25,7 @@ final class Resume: Model, Content {
     @Field(key: "volunteering")
     var volunteering: [ResumeResource.Volunteering]
     @Field(key: "experiences")
-    var expertciences: [ResumeResource.Experience]
+    var experiences: [ResumeResource.Experience]
     @Field(key: "certs")
     var certs: [ResumeResource.Certification]
     @Field(key: "awards")
@@ -48,7 +48,6 @@ final class Resume: Model, Content {
     /// Each resume can have a tag to tailor the resume toward a specific field
     @Field(key: "tag")
     var tag: String?
-    
 }
 
 enum ResumeResource {
@@ -107,7 +106,7 @@ enum ResumeResource {
         let current: Bool
     }
     
-    struct Certicdpfication: Content {
+    struct Certification: Content {
         let name: String
         let issued: String
         let issuer: String

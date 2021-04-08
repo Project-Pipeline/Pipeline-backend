@@ -10,34 +10,52 @@ import Vapor
 import Fluent
 
 struct ResumeController: RouteCollection {
-    enum Operation {
-        case create
-        case update
-    }
-    
     func boot(routes: RoutesBuilder) throws {
         let resumeGrouped = routes.grouped("api", "resume")
-        resumeGrouped.post { try self.resumeAction(req: $0, operation: .create) }
+        resumeGrouped.post(use: createResume)
         resumeGrouped.delete(use: deleteResume)
         
         let resumeUpdate = routes.grouped("api", "resume", "update")
-        resumeUpdate.post { try self.resumeAction(req: $0, operation: .update) }
+        resumeUpdate.post(use: updateResume)
         
         let updateResumeAsActive = routes.grouped("api", "resume", "active")
         updateResumeAsActive.get(use: markAsActive)
     }
     
-    func resumeAction(req: Request, operation: Operation) throws -> EventLoopFuture<HTTPStatus> {
+    func updateResume(req: Request) throws -> EventLoopFuture<HTTPStatus> {
+        let resume = try req.content.decode(Resume.self)
+        return try req
+            .authorize()
+            .flatMap { _ -> EventLoopFuture<Resume> in
+                Resume
+                    .find(resume.id, on: req.db)
+                    .unwrap(or: Abort(.notFound))
+            }
+            .flatMap { obtainedResume -> EventLoopFuture<Void> in
+                obtainedResume.education = resume.education
+                obtainedResume.activities = resume.activities
+                obtainedResume.apClasses = resume.apClasses
+                obtainedResume.publications = resume.publications
+                obtainedResume.volunteering = resume.volunteering
+                obtainedResume.experiences = resume.experiences
+                obtainedResume.certs = resume.certs
+                obtainedResume.awards = resume.awards
+                obtainedResume.interests = resume.interests
+                obtainedResume.testScores = resume.testScores
+                obtainedResume.published = resume.published
+                obtainedResume.isActive = resume.isActive
+                obtainedResume.tag = resume.tag
+                return obtainedResume.update(on: req.db)
+            }
+            .transform(to: .ok)
+    }
+    
+    func createResume(req: Request) throws -> EventLoopFuture<HTTPStatus> {
         let resume = try req.content.decode(Resume.self)
         return try req
             .authorize()
             .flatMap { _ -> EventLoopFuture<Void> in
-                switch operation {
-                case .create:
-                    return resume.save(on: req.db)
-                case .update:
-                    return resume.update(on: req.db)
-                }
+                resume.save(on: req.db)
             }
             .transform(to: .created)
     }
