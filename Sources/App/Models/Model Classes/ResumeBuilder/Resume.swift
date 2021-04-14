@@ -85,7 +85,7 @@ enum ResumeResource {
     
     struct Volunteering: Content {
         let role: String
-        let category: String
+        let cause: String
         let entity: Entity
         let location: String
         let startDate: String
@@ -110,7 +110,7 @@ enum ResumeResource {
         let name: String
         let issued: String
         let issuer: String
-        let url: URL
+        let url: URL?
     }
     
     struct Award: Content {
